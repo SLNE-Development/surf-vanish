@@ -4,6 +4,7 @@ import com.google.auto.service.AutoService
 
 import dev.slne.surf.surfapi.core.api.util.mutableObjectSetOf
 import dev.slne.surf.vanish.core.service.VanishService
+import dev.slne.surf.vanish.core.service.spectateModeService
 import dev.slne.surf.vanish.core.service.util.PluginMessageChannels
 import dev.slne.surf.vanish.core.service.util.VanishPermissionRegistry
 import dev.slne.surf.vanish.velocity.plugin
@@ -24,8 +25,10 @@ class VanishServiceImpl : VanishService {
     override fun setVanished(uuid: UUID, vanished: Boolean) {
         if (vanished) {
             vanishedPlayers.add(uuid)
+            spectateModeService.setSpectating(uuid, true)
         } else {
             vanishedPlayers.remove(uuid)
+            spectateModeService.setSpectating(uuid, false)
         }
 
         this.pushUpdate(uuid, vanished)

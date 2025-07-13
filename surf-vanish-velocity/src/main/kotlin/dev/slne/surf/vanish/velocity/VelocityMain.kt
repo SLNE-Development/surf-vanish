@@ -9,7 +9,6 @@ import com.velocitypowered.api.event.proxy.ProxyInitializeEvent
 import com.velocitypowered.api.proxy.ProxyServer
 import dev.slne.surf.vanish.core.service.spectateModeService
 import dev.slne.surf.vanish.core.service.util.PluginMessageChannels
-import dev.slne.surf.vanish.velocity.command.spectatemode.SpectateModeCommand
 import dev.slne.surf.vanish.velocity.command.vanish.VanishCommand
 import dev.slne.surf.vanish.velocity.listener.PlayerConnectionListener
 import dev.slne.surf.vanish.velocity.listener.PlayerPacketListener
@@ -39,7 +38,6 @@ class VelocityMain @Inject constructor(
         PacketEvents.getAPI().eventManager.registerListener(PlayerPacketListener(), PacketListenerPriority.NORMAL)
         PacketEvents.getAPI().eventManager.registerListener(SilentChestPacketListener(), PacketListenerPriority.NORMAL)
 
-        SpectateModeCommand("spectatemode").register()
         VanishCommand("vanish").register()
 
         spectateModeService.startJob()
