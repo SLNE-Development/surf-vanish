@@ -3,10 +3,13 @@ package dev.slne.surf.vanish.velocity
 import com.github.retrooper.packetevents.PacketEvents
 import com.github.retrooper.packetevents.event.PacketListenerPriority
 import com.github.shynixn.mccoroutine.velocity.SuspendingPluginContainer
+
 import com.google.inject.Inject
+
 import com.velocitypowered.api.event.Subscribe
 import com.velocitypowered.api.event.proxy.ProxyInitializeEvent
 import com.velocitypowered.api.proxy.ProxyServer
+
 import dev.slne.surf.vanish.core.service.spectateModeService
 import dev.slne.surf.vanish.core.service.util.PluginMessageChannels
 import dev.slne.surf.vanish.velocity.command.vanish.VanishCommand
@@ -14,6 +17,7 @@ import dev.slne.surf.vanish.velocity.listener.PlayerConnectionListener
 import dev.slne.surf.vanish.velocity.listener.PlayerPacketListener
 import dev.slne.surf.vanish.velocity.listener.SilentChestPacketListener
 import dev.slne.surf.vanish.velocity.util.toPluginChannel
+
 import org.slf4j.Logger
 import kotlin.jvm.optionals.getOrNull
 
