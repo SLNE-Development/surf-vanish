@@ -15,7 +15,6 @@ import dev.slne.surf.vanish.velocity.util.toPluginChannel
 
 import it.unimi.dsi.fastutil.objects.ObjectSet
 import net.kyori.adventure.text.Component
-import net.kyori.adventure.text.format.TextDecoration
 import net.kyori.adventure.util.Services
 
 import java.io.ByteArrayOutputStream
