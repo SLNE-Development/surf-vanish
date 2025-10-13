@@ -1,0 +1,28 @@
+package dev.slne.surf.vanish.paper.command
+
+import dev.jorel.commandapi.kotlindsl.commandTree
+import dev.jorel.commandapi.kotlindsl.playerExecutor
+import dev.slne.surf.surfapi.core.api.messages.adventure.sendText
+import dev.slne.surf.vanish.paper.util.VanishPermissionRegistry
+import dev.slne.surf.vanish.paper.util.vanishPlayer
+
+fun vanishCommand() = commandTree("vanish") {
+    withPermission(VanishPermissionRegistry.VANISH_COMMAND)
+    playerExecutor { player, _ ->
+        val vanishPlayer = player.vanishPlayer
+
+        if (vanishPlayer.isVanished()) {
+            vanishPlayer.reappear()
+            player.sendText {
+                appendPrefix()
+                success("Du bist nun sichtbar.")
+            }
+        } else {
+            vanishPlayer.vanish()
+            player.sendText {
+                appendPrefix()
+                success("Du bist nun unsichtbar.")
+            }
+        }
+    }
+}
