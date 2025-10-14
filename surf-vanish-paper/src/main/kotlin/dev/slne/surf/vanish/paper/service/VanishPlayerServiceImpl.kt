@@ -18,5 +18,10 @@ class VanishPlayerServiceImpl : VanishPlayerService, Services.Fallback {
         VanishPlayerImpl(it.name, it.uniqueId)
     }
 
+    override fun getPlayer(
+        uuid: UUID,
+        name: String
+    ) = VanishPlayerImpl(name, uuid)
+
     override fun getOfflinePlayer(uuid: UUID) = VanishOfflinePlayerImpl(uuid)
 }

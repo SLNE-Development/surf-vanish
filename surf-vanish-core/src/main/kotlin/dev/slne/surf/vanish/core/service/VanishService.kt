@@ -9,11 +9,15 @@ interface VanishService {
     fun vanish(player: VanishPlayer)
     fun reappear(player: VanishPlayer)
     fun isVanished(player: VanishOfflinePlayer): Boolean
-    fun all(): ObjectSet<VanishPlayer>
+    fun all(): ObjectSet<VanishOfflinePlayer>
+    fun allOnline(): ObjectSet<VanishPlayer>
 
     fun previous(player: VanishOfflinePlayer): VanishOfflinePlayer?
     fun next(player: VanishOfflinePlayer): VanishOfflinePlayer?
     fun current(player: VanishOfflinePlayer): VanishOfflinePlayer?
+
+    fun createAndShowScoreboard(player: VanishPlayer)
+    fun hideAndDeleteScoreboard(player: VanishPlayer)
 
     companion object {
         val INSTANCE = requiredService<VanishService>()

@@ -1,6 +1,11 @@
 package dev.slne.surf.vanish.paper.service
 
 import com.google.auto.service.AutoService
+import dev.slne.surf.surfapi.bukkit.api.scoreboard.ObsoleteScoreboardApi
+import dev.slne.surf.surfapi.bukkit.api.scoreboard.SurfScoreboard
+import dev.slne.surf.surfapi.bukkit.api.surfBukkitApi
+import dev.slne.surf.surfapi.core.api.font.toSmallCaps
+import dev.slne.surf.surfapi.core.api.messages.adventure.buildText
 import dev.slne.surf.surfapi.core.api.messages.adventure.sendText
 import dev.slne.surf.surfapi.core.api.util.mutableObject2ObjectMapOf
 import dev.slne.surf.surfapi.core.api.util.mutableObjectSetOf
@@ -10,25 +15,31 @@ import dev.slne.surf.vanish.api.player.VanishOfflinePlayer
 import dev.slne.surf.vanish.api.player.VanishPlayer
 import dev.slne.surf.vanish.core.service.VanishService
 import dev.slne.surf.vanish.core.service.vanishPlayerService
+import dev.slne.surf.vanish.core.service.vanishService
 import dev.slne.surf.vanish.paper.config
 import dev.slne.surf.vanish.paper.plugin
-import dev.slne.surf.vanish.paper.util.AuditableQueue
-import dev.slne.surf.vanish.paper.util.VanishPermissionRegistry
-import dev.slne.surf.vanish.paper.util.bukkitPlayer
+import dev.slne.surf.vanish.paper.util.*
+import io.papermc.paper.threadedregions.scheduler.ScheduledTask
 import it.unimi.dsi.fastutil.objects.ObjectSet
+import net.kyori.adventure.text.format.TextDecoration
 import net.kyori.adventure.text.minimessage.MiniMessage
 import net.kyori.adventure.util.Services
 import org.bukkit.Bukkit
 import java.util.*
+import java.util.concurrent.TimeUnit
 
+@OptIn(ObsoleteScoreboardApi::class)
 @AutoService(VanishService::class)
 class VanishServiceImpl : VanishService, Services.Fallback {
     private val _vanishedPlayers = mutableObjectSetOf<UUID>()
     private val _playerQueues = mutableObject2ObjectMapOf<UUID, AuditableQueue>()
+    private val _scoreboards = mutableObject2ObjectMapOf<UUID, SurfScoreboard>()
 
     override fun vanish(player: VanishPlayer) {
         _vanishedPlayers.add(player.uuid)
         _playerQueues[player.uuid] = AuditableQueue()
+
+        createAndShowScoreboard(player)
 
         Bukkit.getOnlinePlayers()
             .filterNot { it.hasPermission(VanishPermissionRegistry.VANISH_BYPASS) }.forEach {
@@ -49,6 +60,8 @@ class VanishServiceImpl : VanishService, Services.Fallback {
         _vanishedPlayers.remove(player.uuid)
         _playerQueues.remove(player.uuid)
 
+        hideAndDeleteScoreboard(player)
+
         Bukkit.getOnlinePlayers()
             .filterNot { it.hasPermission(VanishPermissionRegistry.VANISH_BYPASS) }.forEach {
 
@@ -66,8 +79,11 @@ class VanishServiceImpl : VanishService, Services.Fallback {
     }
 
     override fun isVanished(player: VanishOfflinePlayer) = _vanishedPlayers.contains(player.uuid)
-    override fun all(): ObjectSet<VanishPlayer> =
-        _vanishedPlayers.mapNotNull { vanishPlayerService.getPlayer(it) }.toObjectSet()
+    override fun all(): ObjectSet<VanishOfflinePlayer> =
+        _vanishedPlayers.map { vanishPlayerService.getOfflinePlayer(it) }.toObjectSet()
+
+    override fun allOnline(): ObjectSet<VanishPlayer> =
+        all().mapNotNull { it.bukkitPlayer?.vanishPlayer }.toObjectSet()
 
     override fun previous(player: VanishOfflinePlayer) =
         _playerQueues.get(player.uuid)?.back()?.let {
@@ -87,4 +103,100 @@ class VanishServiceImpl : VanishService, Services.Fallback {
         _playerQueues.get(player.uuid)?.current?.let {
             vanishPlayerService.getOfflinePlayer(it)
         }
+
+    override fun createAndShowScoreboard(player: VanishPlayer) {
+        _scoreboards[player.uuid] = surfBukkitApi.createScoreboard(buildText {
+            primary("     SpectateMode     ", TextDecoration.BOLD)
+        })
+            .addLine(buildText {
+                info("Spieler")
+            })
+            .addUpdatableLine {
+                buildText {
+                    spacer(
+                        player.currentTarget?.bukkitPlayer?.name?.toSmallCaps()
+                            ?: "Unbekannt".toSmallCaps()
+                    )
+                }
+            }
+            .addEmptyLine()
+            .addLine(buildText {
+                info("Leben")
+            })
+            .addUpdatableLine {
+                buildText {
+                    spacer("${player.currentTarget?.bukkitPlayer?.health?.toInt() ?: "Unbekannt"}".toSmallCaps() + "/" + "${player.currentTarget?.bukkitPlayer?.healthScale?.toInt() ?: "Unbekannt"}".toSmallCaps())
+                }
+            }
+            .addEmptyLine()
+            .addLine(buildText {
+                info("Entfernung")
+            })
+            .addUpdatableLine {
+                buildText {
+                    spacer(
+                        "${
+                            player.currentTarget?.bukkitPlayer?.location?.distance(
+                                player.bukkitPlayer.location
+                            )?.toInt() ?: "Unbekannt"
+                        } Blöcke".toSmallCaps()
+                    )
+                }
+            }
+            .addEmptyLine()
+            .addLine(buildText {
+                info("Ping")
+            })
+            .addUpdatableLine {
+                buildText {
+                    spacer(
+                        "${player.currentTarget?.bukkitPlayer?.ping ?: "Unbekannt "}ms".toSmallCaps()
+                    )
+                }
+            }
+            .buildAutoUpdatable()
+
+        _scoreboards[player.uuid]?.enable()
+        _scoreboards[player.uuid]?.addViewer(player.bukkitPlayer)
+    }
+
+    override fun hideAndDeleteScoreboard(player: VanishPlayer) {
+        _scoreboards[player.uuid]?.disable()
+        _scoreboards.remove(player.uuid)
+    }
+
+    companion object {
+        private lateinit var actionbarTask: ScheduledTask
+
+        fun startTask() {
+            if (::actionbarTask.isInitialized && !actionbarTask.isCancelled) {
+                return
+            }
+
+            actionbarTask = Bukkit.getAsyncScheduler().runAtFixedRate(plugin, {
+                vanishService.allOnline().forEach {
+                    it.bukkitPlayer.sendActionBar(buildText {
+                        info("Zurück: ")
+                        displayKey("sneak")
+                        info(" + ")
+                        displayKey("swapOffhand")
+                        darkSpacer(" - ")
+                        primary("Du bist unsichtbar!")
+                        darkSpacer(" - ")
+                        info(" Weiter: ")
+                        displayKey("swapOffhand")
+                        darkSpacer(" - ")
+                        info("Teleport: 2x ")
+                        displayKey("sneak")
+                    })
+                }
+            }, 0L, 1, TimeUnit.SECONDS)
+        }
+
+        fun stopTask() {
+            if (::actionbarTask.isInitialized && !actionbarTask.isCancelled) {
+                actionbarTask.cancel()
+            }
+        }
+    }
 }

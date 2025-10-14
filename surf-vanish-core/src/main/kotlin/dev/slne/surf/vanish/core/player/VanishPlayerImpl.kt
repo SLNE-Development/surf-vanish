@@ -1,5 +1,6 @@
 package dev.slne.surf.vanish.core.player
 
+import dev.slne.surf.vanish.api.player.VanishOfflinePlayer
 import dev.slne.surf.vanish.api.player.VanishPlayer
 import dev.slne.surf.vanish.core.service.vanishService
 import java.util.*
@@ -10,5 +11,7 @@ data class VanishPlayerImpl(
 ) : VanishPlayer {
     override fun vanish() = vanishService.vanish(this)
     override fun reappear() = vanishService.reappear(this)
+    override val currentTarget: VanishOfflinePlayer? get() = vanishService.current(this)
+
     override fun isVanished() = vanishService.isVanished(this)
 }

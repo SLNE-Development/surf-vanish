@@ -8,6 +8,7 @@ import dev.slne.surf.vanish.paper.config.VanishConfiguration
 import dev.slne.surf.vanish.paper.listener.ConnectionListener
 import dev.slne.surf.vanish.paper.listener.HotkeyListener
 import dev.slne.surf.vanish.paper.listener.SilencePlayerListener
+import dev.slne.surf.vanish.paper.service.VanishServiceImpl
 import org.bukkit.plugin.java.JavaPlugin
 
 val plugin get() = JavaPlugin.getPlugin(PaperMain::class.java)
@@ -19,10 +20,12 @@ class PaperMain : SuspendingJavaPlugin() {
         PacketEvents.getAPI().eventManager.registerListener(HotkeyListener)
 
         vanishCommand()
+
+        VanishServiceImpl.startTask()
     }
 
     override fun onDisable() {
-        super.onDisable()
+        VanishServiceImpl.stopTask()
     }
 
     val vanishConfig = VanishConfiguration()

@@ -5,4 +5,6 @@ interface VanishPlayer : VanishOfflinePlayer {
 
     fun vanish()
     fun reappear()
+
+    val currentTarget: VanishOfflinePlayer?
 }
