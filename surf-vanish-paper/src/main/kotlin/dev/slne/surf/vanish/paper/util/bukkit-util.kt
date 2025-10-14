@@ -1,9 +1,5 @@
 package dev.slne.surf.vanish.paper.util
 
-import com.destroystokyo.paper.profile.ProfileProperty
-import com.github.retrooper.packetevents.PacketEvents
-import com.github.retrooper.packetevents.protocol.player.TextureProperty
-import com.github.retrooper.packetevents.protocol.player.User
 import dev.slne.surf.vanish.api.player.VanishOfflinePlayer
 import dev.slne.surf.vanish.api.player.VanishPlayer
 import dev.slne.surf.vanish.core.service.vanishPlayerService
@@ -16,13 +12,4 @@ val VanishPlayer.bukkitPlayer
 val Player.vanishPlayer
     get() = vanishPlayerService.getPlayer(uniqueId)
         ?: error("VanishPlayer for ${this.name} (${this.uniqueId}) not found")
-
 val VanishOfflinePlayer.bukkitPlayer get() = Bukkit.getPlayer(this.uuid)
-
-val Player.packetPlayer: User get() = PacketEvents.getAPI().playerManager.getUser(this)
-
-fun ProfileProperty.toTextureProperty() = TextureProperty(
-    this.name,
-    this.value,
-    this.signature
-)
