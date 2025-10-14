@@ -3,15 +3,21 @@ package dev.slne.surf.vanish.paper.listener
 import com.destroystokyo.paper.event.player.PlayerPickupExperienceEvent
 import dev.slne.surf.surfapi.bukkit.api.event.cancel
 import dev.slne.surf.vanish.paper.util.vanishPlayer
-import io.papermc.paper.block.TileStateInventoryHolder
+import org.bukkit.GameMode
+import org.bukkit.block.Barrel
+import org.bukkit.block.Chest
+import org.bukkit.block.EnderChest
+import org.bukkit.block.ShulkerBox
 import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
+import org.bukkit.event.block.Action
 import org.bukkit.event.block.EntityBlockFormEvent
 import org.bukkit.event.entity.EntityDamageEvent
 import org.bukkit.event.entity.FoodLevelChangeEvent
 import org.bukkit.event.player.*
 import org.bukkit.event.raid.RaidTriggerEvent
+import org.bukkit.inventory.InventoryHolder
 
 object SilencePlayerListener : Listener {
     @EventHandler
@@ -32,14 +38,45 @@ object SilencePlayerListener : Listener {
             return
         }
 
-        val block = event.clickedBlock ?: return
-        val blockState = block.state
-
-        if (blockState is TileStateInventoryHolder) {
-            event.cancel()
-
-            player.openInventory(blockState.inventory)
+        if (event.action != Action.RIGHT_CLICK_BLOCK) {
+            return
         }
+
+        if (player.isSneaking) {
+            return
+        }
+
+        val blockState = event.clickedBlock?.state ?: return
+        event.cancel()
+
+        when (blockState) {
+            is EnderChest -> {
+                player.openInventory(player.enderChest)
+            }
+
+            is Chest, is Barrel, is ShulkerBox -> {
+                val previousGameMode = player.gameMode
+                player.gameMode = GameMode.SPECTATOR
+                player.openInventory((blockState as InventoryHolder).inventory)
+                player.gameMode = previousGameMode
+            }
+        }
+    }
+
+    @EventHandler
+    fun onPressurePlateActive(event: PlayerInteractEvent) {
+        val player = event.player
+        val vanishPlayer = player.vanishPlayer
+
+        if (!vanishPlayer.isVanished()) {
+            return
+        }
+
+        if (event.action != Action.PHYSICAL) {
+            return
+        }
+
+        event.cancel()
     }
 
 
