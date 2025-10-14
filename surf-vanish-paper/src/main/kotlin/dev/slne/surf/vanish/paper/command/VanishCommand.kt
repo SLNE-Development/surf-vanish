@@ -30,8 +30,8 @@ fun vanishCommand() = commandTree("vanish") {
         }
     }
 
-    withPermission(VanishPermissionRegistry.VANISH_COMMAND_RELOAD)
     literalArgument("reload") {
+        withPermission(VanishPermissionRegistry.VANISH_COMMAND_RELOAD)
         anyExecutor { executor, _ ->
             val ms = measureTimeMillis {
                 plugin.vanishConfig.reload()
