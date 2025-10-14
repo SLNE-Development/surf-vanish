@@ -11,6 +11,10 @@ interface VanishService {
     fun isVanished(player: VanishOfflinePlayer): Boolean
     fun all(): ObjectSet<VanishPlayer>
 
+    fun previous(player: VanishOfflinePlayer): VanishOfflinePlayer?
+    fun next(player: VanishOfflinePlayer): VanishOfflinePlayer?
+    fun current(player: VanishOfflinePlayer): VanishOfflinePlayer?
+
     companion object {
         val INSTANCE = requiredService<VanishService>()
     }

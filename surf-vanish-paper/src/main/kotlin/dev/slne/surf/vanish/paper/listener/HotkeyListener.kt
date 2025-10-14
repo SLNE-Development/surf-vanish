@@ -1,0 +1,120 @@
+package dev.slne.surf.vanish.paper.listener
+
+import com.github.retrooper.packetevents.event.PacketListenerAbstract
+import com.github.retrooper.packetevents.event.PacketReceiveEvent
+import com.github.retrooper.packetevents.protocol.packettype.PacketType
+import com.github.retrooper.packetevents.protocol.player.DiggingAction
+import com.github.retrooper.packetevents.wrapper.play.client.WrapperPlayClientPlayerDigging
+import com.github.retrooper.packetevents.wrapper.play.client.WrapperPlayClientPlayerInput
+import dev.slne.surf.surfapi.core.api.messages.adventure.sendText
+import dev.slne.surf.surfapi.core.api.util.mutableObject2ObjectMapOf
+import dev.slne.surf.vanish.core.service.vanishService
+import dev.slne.surf.vanish.paper.util.bukkitPlayer
+import dev.slne.surf.vanish.paper.util.vanishPlayer
+import org.bukkit.entity.Player
+import java.util.*
+
+object HotkeyListener : PacketListenerAbstract() {
+    private val _lastSneaks = mutableObject2ObjectMapOf<UUID, Long>()
+
+    override fun onPacketReceive(event: PacketReceiveEvent) {
+        val player = event.getPlayer<Player>() ?: return
+        val vanishPlayer = player.vanishPlayer
+
+        if (!vanishPlayer.isVanished()) {
+            return
+        }
+
+        when (event.packetType) {
+            PacketType.Play.Client.PLAYER_INPUT -> {
+                val packet = WrapperPlayClientPlayerInput(event)
+
+                if (packet.isShift) {
+                    val lastSneak = _lastSneaks[player.uniqueId]
+                    val now = System.currentTimeMillis()
+
+                    if (lastSneak != null && now - lastSneak < 500) {
+                        val current = vanishService.current(vanishPlayer) ?: run {
+                            player.sendText {
+                                appendPrefix()
+                                error("Du schaust gerade niemandem zu.")
+                            }
+                            return
+                        }
+
+                        val vanishTarget = current.bukkitPlayer ?: run {
+                            player.sendText {
+                                appendPrefix()
+                                error("Der Spieler, dem du zuschaust, ist nicht mehr online.")
+                            }
+                            return
+                        }
+
+                        player.teleportAsync(vanishTarget.location)
+                        player.sendText {
+                            appendPrefix()
+                            success("Du bist nun wieder bei ${vanishTarget.name} .")
+                        }
+                    } else {
+                        _lastSneaks[player.uniqueId] = now
+                    }
+                }
+            }
+
+            PacketType.Play.Client.PLAYER_DIGGING -> {
+                val packet = WrapperPlayClientPlayerDigging(event)
+
+                if (packet.action == DiggingAction.SWAP_ITEM_WITH_OFFHAND) {
+                    val sneakCacheResult = _lastSneaks[player.uniqueId]
+
+                    if (sneakCacheResult != null && System.currentTimeMillis() - sneakCacheResult < 1000) {
+                        val previous = vanishService.previous(vanishPlayer) ?: run {
+                            player.sendText {
+                                appendPrefix()
+                                error("Du hast noch keinen weiteren Spieler angeguckt.")
+                            }
+                            return
+                        }
+
+                        val vanishTarget = previous.bukkitPlayer ?: run {
+                            player.sendText {
+                                appendPrefix()
+                                error("Der Spieler, dem du zuschauen möchtest, ist nicht mehr online.")
+                            }
+                            return
+                        }
+
+                        player.teleportAsync(vanishTarget.location)
+                        player.sendText {
+                            appendPrefix()
+                            success("Du schaust nun wieder ${vanishTarget.name} zu.")
+                        }
+                        return
+                    }
+
+                    val next = vanishService.next(vanishPlayer) ?: run {
+                        player.sendText {
+                            appendPrefix()
+                            error("Du hast noch keinen weiteren Spieler angeguckt.")
+                        }
+                        return
+                    }
+
+                    val vanishTarget = next.bukkitPlayer ?: run {
+                        player.sendText {
+                            appendPrefix()
+                            error("Der Spieler, dem du zuschauen möchtest, ist nicht mehr online.")
+                        }
+                        return
+                    }
+
+                    player.teleportAsync(vanishTarget.location)
+                    player.sendText {
+                        appendPrefix()
+                        success("Du schaust nun ${vanishTarget.name} zu.")
+                    }
+                }
+            }
+        }
+    }
+}
