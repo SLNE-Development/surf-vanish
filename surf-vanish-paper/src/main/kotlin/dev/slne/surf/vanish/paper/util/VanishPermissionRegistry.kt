@@ -6,4 +6,5 @@ object VanishPermissionRegistry : PermissionRegistry() {
     const val BASE = "surf.vanish"
     val VANISH_BYPASS = create("$BASE.bypass")
     val VANISH_COMMAND = create("$BASE.command")
+    val VANISH_COMMAND_RELOAD = create("$VANISH_COMMAND.reload")
 }

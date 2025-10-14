@@ -1,0 +1,1 @@
+package dev.slne.surf.vanish.paper.command

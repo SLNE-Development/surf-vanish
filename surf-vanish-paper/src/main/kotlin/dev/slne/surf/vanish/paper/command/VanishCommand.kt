@@ -1,10 +1,14 @@
 package dev.slne.surf.vanish.paper.command
 
+import dev.jorel.commandapi.kotlindsl.anyExecutor
 import dev.jorel.commandapi.kotlindsl.commandTree
+import dev.jorel.commandapi.kotlindsl.literalArgument
 import dev.jorel.commandapi.kotlindsl.playerExecutor
 import dev.slne.surf.surfapi.core.api.messages.adventure.sendText
+import dev.slne.surf.vanish.paper.plugin
 import dev.slne.surf.vanish.paper.util.VanishPermissionRegistry
 import dev.slne.surf.vanish.paper.util.vanishPlayer
+import kotlin.system.measureTimeMillis
 
 fun vanishCommand() = commandTree("vanish") {
     withPermission(VanishPermissionRegistry.VANISH_COMMAND)
@@ -22,6 +26,20 @@ fun vanishCommand() = commandTree("vanish") {
             player.sendText {
                 appendPrefix()
                 success("Du bist nun unsichtbar.")
+            }
+        }
+    }
+
+    withPermission(VanishPermissionRegistry.VANISH_COMMAND_RELOAD)
+    literalArgument("reload") {
+        anyExecutor { executor, _ ->
+            val ms = measureTimeMillis {
+                plugin.vanishConfig.reload()
+            }
+
+            executor.sendText {
+                appendPrefix()
+                success("Die Konfiguration wurde neu geladen (${ms}ms)!")
             }
         }
     }
