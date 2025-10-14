@@ -128,7 +128,7 @@ object SilencePlayerListener : Listener {
     }
 
     @EventHandler
-    fun onBucketEmtry(event: PlayerBucketEmptyEvent) {
+    fun onBucketEmpty(event: PlayerBucketEmptyEvent) {
         val vanishPlayer = event.player.vanishPlayer
 
         if (vanishPlayer.isVanished()) {
