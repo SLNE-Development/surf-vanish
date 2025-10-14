@@ -3,6 +3,7 @@ package dev.slne.surf.vanish.paper.config
 import dev.slne.surf.surfapi.core.api.config.manager.SpongeConfigManager
 import dev.slne.surf.surfapi.core.api.config.surfConfigApi
 import dev.slne.surf.vanish.paper.plugin
+import net.kyori.adventure.text.format.NamedTextColor
 import org.spongepowered.configurate.objectmapping.ConfigSerializable
 
 @ConfigSerializable
@@ -32,4 +33,8 @@ class VanishConfiguration {
     }
 
     val config get() = configManager.config
+
+    companion object {
+        val GLOW_COLOR: NamedTextColor = NamedTextColor.GREEN
+    }
 }

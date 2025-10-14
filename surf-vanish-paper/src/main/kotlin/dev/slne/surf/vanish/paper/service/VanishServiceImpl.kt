@@ -1,6 +1,7 @@
 package dev.slne.surf.vanish.paper.service
 
 import com.google.auto.service.AutoService
+import dev.slne.surf.surfapi.bukkit.api.glow.glowingApi
 import dev.slne.surf.surfapi.bukkit.api.scoreboard.ObsoleteScoreboardApi
 import dev.slne.surf.surfapi.bukkit.api.scoreboard.SurfScoreboard
 import dev.slne.surf.surfapi.bukkit.api.surfBukkitApi
@@ -17,6 +18,7 @@ import dev.slne.surf.vanish.core.service.VanishService
 import dev.slne.surf.vanish.core.service.vanishPlayerService
 import dev.slne.surf.vanish.core.service.vanishService
 import dev.slne.surf.vanish.paper.config
+import dev.slne.surf.vanish.paper.config.VanishConfiguration
 import dev.slne.surf.vanish.paper.plugin
 import dev.slne.surf.vanish.paper.util.*
 import io.papermc.paper.threadedregions.scheduler.ScheduledTask
@@ -57,6 +59,10 @@ class VanishServiceImpl : VanishService, Services.Fallback {
     }
 
     override fun reappear(player: VanishPlayer) {
+        current(player)?.bukkitPlayer?.let { currentPlayer ->
+            glowingApi.removeGlowing(currentPlayer, player.bukkitPlayer)
+        }
+
         _vanishedPlayers.remove(player.uuid)
         _playerQueues.remove(player.uuid)
 
@@ -85,19 +91,35 @@ class VanishServiceImpl : VanishService, Services.Fallback {
     override fun allOnline(): ObjectSet<VanishPlayer> =
         all().mapNotNull { it.bukkitPlayer?.vanishPlayer }.toObjectSet()
 
-    override fun previous(player: VanishOfflinePlayer) =
-        _playerQueues.get(player.uuid)?.back()?.let {
+    override fun previous(player: VanishOfflinePlayer): VanishOfflinePlayer? {
+        return _playerQueues.get(player.uuid)?.back()?.let {
             vanishPlayerService.getOfflinePlayer(it)
         }
+    }
 
-    override fun next(player: VanishOfflinePlayer) =
-        _playerQueues.get(player.uuid)?.next(Bukkit.getOnlinePlayers().filterNot {
+    override fun next(player: VanishOfflinePlayer): VanishOfflinePlayer? {
+        current(player)?.bukkitPlayer?.let { currentPlayer ->
+            player.bukkitPlayer?.let { self ->
+                glowingApi.removeGlowing(currentPlayer, self)
+            }
+        }
+
+        val next = _playerQueues.get(player.uuid)?.next(Bukkit.getOnlinePlayers().filterNot {
             it.hasPermission(
                 VanishPermissionRegistry.VANISH_BYPASS
             )
         }.map { it.uniqueId }.toObjectList())?.let {
             vanishPlayerService.getOfflinePlayer(it)
         }
+
+        next?.bukkitPlayer?.let { nextPlayer ->
+            player.bukkitPlayer?.let { self ->
+                glowingApi.makeGlowing(nextPlayer, self, VanishConfiguration.GLOW_COLOR)
+            }
+        }
+
+        return next
+    }
 
     override fun current(player: VanishOfflinePlayer) =
         _playerQueues.get(player.uuid)?.current?.let {
