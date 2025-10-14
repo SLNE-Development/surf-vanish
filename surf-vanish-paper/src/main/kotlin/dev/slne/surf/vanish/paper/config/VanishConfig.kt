@@ -9,8 +9,8 @@ import org.spongepowered.configurate.objectmapping.ConfigSerializable
 @ConfigSerializable
 data class VanishConfig(
     val spoofConnectionMessages: Boolean = true,
-    val fakeConnectMessage: String = "<player_name> <yellow>joined",
-    val fakeDisconnectMessage: String = "<player_name> <yellow>left",
+    val fakeConnectMessage: String = "<gray>[<green>+<gray>] <luckperms_prefix><player_name>",
+    val fakeDisconnectMessage: String = "<gray>[<red>-<gray>] <luckperms_prefix><player_name>",
 )
 
 class VanishConfiguration {
