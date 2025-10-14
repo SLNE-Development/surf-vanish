@@ -14,6 +14,7 @@ class SurfVanishApiImpl : SurfVanishApi, Services.Fallback {
     override fun vanish(player: VanishPlayer) = vanishService.vanish(player)
     override fun reappear(player: VanishPlayer) = vanishService.reappear(player)
     override fun isVanished(player: VanishOfflinePlayer) = vanishService.isVanished(player)
+    override fun vanishedPlayers() = vanishService.all()
 
     override fun getPlayer(name: String) = vanishPlayerService.getPlayer(name)
     override fun getPlayer(uuid: UUID) = vanishPlayerService.getPlayer(uuid)
