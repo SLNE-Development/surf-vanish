@@ -7,6 +7,7 @@ plugins {
 surfPaperPluginApi {
     mainClass("dev.slne.surf.vanish.paper.PaperMain")
     generateLibraryLoader(false)
+    foliaSupported(true)
 
     authors.add("red")
 
@@ -18,4 +19,5 @@ surfPaperPluginApi {
 dependencies {
     api(project(":surf-vanish-core"))
     compileOnly(libs.miniplaceholder.api)
+    implementation("dev.slne.surf:surf-redis:1.0.0-SNAPSHOT")
 }

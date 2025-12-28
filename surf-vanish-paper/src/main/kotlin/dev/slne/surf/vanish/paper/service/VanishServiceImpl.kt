@@ -48,7 +48,7 @@ class VanishServiceImpl : VanishService, Services.Fallback {
                 it.hidePlayer(
                     plugin,
                     player.bukkitPlayer
-                ) //"Das kann man nicht umgehen, das ist Quatsch." ~ Keviro, 14.10.2025 - 11:01:22 Uhr GMT+2
+                )
 
                 if (config.spoofConnectionMessages) {
                     it.sendText {
@@ -79,7 +79,7 @@ class VanishServiceImpl : VanishService, Services.Fallback {
                 it.showPlayer(
                     plugin,
                     player.bukkitPlayer
-                ) //"Das kann man nicht umgehen, das ist Quatsch." ~ Keviro, 14.10.2025 - 11:01:22 Uhr GMT+2
+                )
 
                 if (config.spoofConnectionMessages) {
                     it.sendText {
