@@ -2,12 +2,10 @@ package dev.slne.surf.vanish.paper.listener
 
 import dev.slne.surf.surfapi.bukkit.api.glow.glowingApi
 import dev.slne.surf.surfapi.core.api.messages.adventure.sendText
-import dev.slne.surf.tab.api.redis.TabHideRedisEvent
 import dev.slne.surf.vanish.core.service.vanishPlayerService
 import dev.slne.surf.vanish.core.service.vanishService
 import dev.slne.surf.vanish.paper.config.VanishConfiguration
 import dev.slne.surf.vanish.paper.plugin
-import dev.slne.surf.vanish.paper.redisApi
 import dev.slne.surf.vanish.paper.util.VanishPermissionRegistry
 import dev.slne.surf.vanish.paper.util.bukkitPlayer
 import dev.slne.surf.vanish.paper.util.vanishPlayer
@@ -37,23 +35,18 @@ object ConnectionListener : Listener {
                 glowingApi.makeGlowing(currentPlayer, event.player, VanishConfiguration.GLOW_COLOR)
             }
 
-            Bukkit.getOnlinePlayers()
-                .filterNot { it.hasPermission(VanishPermissionRegistry.VANISH_BYPASS) }.forEach {
-                    it.hidePlayer(plugin, event.player)
+            Bukkit.getGlobalRegionScheduler().runDelayed(plugin, {
+                Bukkit.getOnlinePlayers()
+                    .filterNot { it.hasPermission(VanishPermissionRegistry.VANISH_BYPASS) }
+                    .forEach {
+                        it.hidePlayer(plugin, event.player)
+                    }
 
-                    redisApi.publishEvent(
-                        TabHideRedisEvent(
-                            it.uniqueId,
-                            event.player.uniqueId
-                        )
-                    )
+                event.player.sendText {
+                    appendPrefix()
+                    info("Du bist für andere Spieler unsichtbar.")
                 }
-
-
-            event.player.sendText {
-                appendPrefix()
-                info("Du bist für andere Spieler unsichtbar.")
-            }
+            }, 17)
         }
     }
 
