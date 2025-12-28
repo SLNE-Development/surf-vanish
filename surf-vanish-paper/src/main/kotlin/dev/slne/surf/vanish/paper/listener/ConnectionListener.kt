@@ -1,6 +1,7 @@
 package dev.slne.surf.vanish.paper.listener
 
 import dev.slne.surf.surfapi.bukkit.api.glow.glowingApi
+import dev.slne.surf.surfapi.core.api.messages.adventure.sendText
 import dev.slne.surf.vanish.core.service.vanishPlayerService
 import dev.slne.surf.vanish.core.service.vanishService
 import dev.slne.surf.vanish.paper.config.VanishConfiguration
@@ -34,10 +35,18 @@ object ConnectionListener : Listener {
                 glowingApi.makeGlowing(currentPlayer, event.player, VanishConfiguration.GLOW_COLOR)
             }
 
-            Bukkit.getOnlinePlayers()
-                .filterNot { it.hasPermission(VanishPermissionRegistry.VANISH_BYPASS) }.forEach {
-                    it.hidePlayer(plugin, event.player)
+            Bukkit.getGlobalRegionScheduler().runDelayed(plugin, {
+                Bukkit.getOnlinePlayers()
+                    .filterNot { it.hasPermission(VanishPermissionRegistry.VANISH_BYPASS) }
+                    .forEach {
+                        it.hidePlayer(plugin, event.player)
+                    }
+
+                event.player.sendText {
+                    appendPrefix()
+                    info("Du bist für andere Spieler unsichtbar.")
                 }
+            }, 17)
         }
     }
 

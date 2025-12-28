@@ -22,10 +22,14 @@ class PaperMain : SuspendingJavaPlugin() {
         vanishCommand()
 
         VanishServiceImpl.startTask()
+
+        redisLoader.connect()
     }
 
     override fun onDisable() {
         VanishServiceImpl.stopTask()
+
+        redisLoader.disconnect()
     }
 
     val vanishConfig = VanishConfiguration()

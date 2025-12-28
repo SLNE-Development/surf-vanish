@@ -12,6 +12,8 @@ import dev.slne.surf.surfapi.core.api.util.mutableObject2ObjectMapOf
 import dev.slne.surf.surfapi.core.api.util.mutableObjectSetOf
 import dev.slne.surf.surfapi.core.api.util.toObjectList
 import dev.slne.surf.surfapi.core.api.util.toObjectSet
+import dev.slne.surf.tab.api.redis.TabHideRedisEvent
+import dev.slne.surf.tab.api.redis.TabShowRedisEvent
 import dev.slne.surf.vanish.api.player.VanishOfflinePlayer
 import dev.slne.surf.vanish.api.player.VanishPlayer
 import dev.slne.surf.vanish.core.service.VanishService
@@ -21,6 +23,7 @@ import dev.slne.surf.vanish.paper.config
 import dev.slne.surf.vanish.paper.config.VanishConfiguration
 import dev.slne.surf.vanish.paper.hook.MiniPlaceholdersHook
 import dev.slne.surf.vanish.paper.plugin
+import dev.slne.surf.vanish.paper.redisApi
 import dev.slne.surf.vanish.paper.util.*
 import io.papermc.paper.threadedregions.scheduler.ScheduledTask
 import it.unimi.dsi.fastutil.objects.ObjectSet
@@ -44,11 +47,19 @@ class VanishServiceImpl : VanishService, Services.Fallback {
         createAndShowScoreboard(player)
 
         Bukkit.getOnlinePlayers()
-            .filterNot { it.hasPermission(VanishPermissionRegistry.VANISH_BYPASS) }.forEach {
+            .filterNot { it.hasPermission(VanishPermissionRegistry.VANISH_BYPASS) }
+            .filterNot { it.uniqueId == player.uuid }.forEach {
                 it.hidePlayer(
                     plugin,
                     player.bukkitPlayer
-                ) //"Das kann man nicht umgehen, das ist Quatsch." ~ Keviro, 14.10.2025 - 11:01:22 Uhr GMT+2
+                )
+
+                redisApi.publishEvent(
+                    TabHideRedisEvent(
+                        it.uniqueId,
+                        player.uuid
+                    )
+                )
 
                 if (config.spoofConnectionMessages) {
                     it.sendText {
@@ -74,12 +85,20 @@ class VanishServiceImpl : VanishService, Services.Fallback {
         hideAndDeleteScoreboard(player)
 
         Bukkit.getOnlinePlayers()
-            .filterNot { it.hasPermission(VanishPermissionRegistry.VANISH_BYPASS) }.forEach {
+            .filterNot { it.hasPermission(VanishPermissionRegistry.VANISH_BYPASS) }
+            .filterNot { it.uniqueId == player.uuid }.forEach {
 
                 it.showPlayer(
                     plugin,
                     player.bukkitPlayer
-                ) //"Das kann man nicht umgehen, das ist Quatsch." ~ Keviro, 14.10.2025 - 11:01:22 Uhr GMT+2
+                )
+
+                redisApi.publishEvent(
+                    TabShowRedisEvent(
+                        it.uniqueId,
+                        player.uuid
+                    )
+                )
 
                 if (config.spoofConnectionMessages) {
                     it.sendText {
