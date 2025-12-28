@@ -48,7 +48,7 @@ class VanishServiceImpl : VanishService, Services.Fallback {
 
         Bukkit.getOnlinePlayers()
             .filterNot { it.hasPermission(VanishPermissionRegistry.VANISH_BYPASS) }
-            .filterNot { it.player?.uniqueId == player.uuid }.forEach {
+            .filterNot { it.uniqueId == player.uuid }.forEach {
                 it.hidePlayer(
                     plugin,
                     player.bukkitPlayer
@@ -86,7 +86,7 @@ class VanishServiceImpl : VanishService, Services.Fallback {
 
         Bukkit.getOnlinePlayers()
             .filterNot { it.hasPermission(VanishPermissionRegistry.VANISH_BYPASS) }
-            .filterNot { it.player?.uniqueId == player.uuid }.forEach {
+            .filterNot { it.uniqueId == player.uuid }.forEach {
 
                 it.showPlayer(
                     plugin,
