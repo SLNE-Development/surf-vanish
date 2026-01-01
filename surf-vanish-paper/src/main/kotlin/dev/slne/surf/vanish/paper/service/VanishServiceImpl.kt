@@ -12,8 +12,7 @@ import dev.slne.surf.surfapi.core.api.util.mutableObject2ObjectMapOf
 import dev.slne.surf.surfapi.core.api.util.mutableObjectSetOf
 import dev.slne.surf.surfapi.core.api.util.toObjectList
 import dev.slne.surf.surfapi.core.api.util.toObjectSet
-import dev.slne.surf.tab.api.redis.TabHideRedisEvent
-import dev.slne.surf.tab.api.redis.TabShowRedisEvent
+import dev.slne.surf.tab.api.redis.TabEntryUpdateRedisEvent
 import dev.slne.surf.vanish.api.player.VanishOfflinePlayer
 import dev.slne.surf.vanish.api.player.VanishPlayer
 import dev.slne.surf.vanish.core.service.VanishService
@@ -54,13 +53,6 @@ class VanishServiceImpl : VanishService, Services.Fallback {
                     player.bukkitPlayer
                 )
 
-                redisApi.publishEvent(
-                    TabHideRedisEvent(
-                        it.uniqueId,
-                        player.uuid
-                    )
-                )
-
                 if (config.spoofConnectionMessages) {
                     it.sendText {
                         append(
@@ -94,8 +86,7 @@ class VanishServiceImpl : VanishService, Services.Fallback {
                 )
 
                 redisApi.publishEvent(
-                    TabShowRedisEvent(
-                        it.uniqueId,
+                    TabEntryUpdateRedisEvent(
                         player.uuid
                     )
                 )
