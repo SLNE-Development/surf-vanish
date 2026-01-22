@@ -11,6 +11,8 @@ surfPaperPluginApi {
 
     authors.add("red")
 
+    withSurfRedis()
+
     serverDependencies {
         registerSoft("MiniPlaceholders")
     }
@@ -19,6 +21,5 @@ surfPaperPluginApi {
 dependencies {
     api(project(":surf-vanish-core"))
     compileOnly(libs.miniplaceholder.api)
-    implementation("dev.slne.surf:surf-redis:1.0.0-SNAPSHOT")
     implementation("dev.slne.surf.tab:surf-tab-api:1.21.11-1.0.2-SNAPSHOT")
 }
