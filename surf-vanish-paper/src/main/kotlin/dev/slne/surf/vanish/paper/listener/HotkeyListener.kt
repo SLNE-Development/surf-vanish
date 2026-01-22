@@ -36,7 +36,7 @@ object HotkeyListener : PacketListenerAbstract() {
                     if (lastSneak != null && now - lastSneak < 500) {
                         val current = vanishService.current(vanishPlayer) ?: run {
                             player.sendText {
-                                appendPrefix()
+                                appendErrorPrefix()
                                 error("Du schaust gerade niemandem zu.")
                             }
                             return
@@ -44,7 +44,7 @@ object HotkeyListener : PacketListenerAbstract() {
 
                         val vanishTarget = current.bukkitPlayer ?: run {
                             player.sendText {
-                                appendPrefix()
+                                appendErrorPrefix()
                                 error("Der Spieler, dem du zuschaust, ist nicht mehr online.")
                             }
                             return
@@ -52,7 +52,7 @@ object HotkeyListener : PacketListenerAbstract() {
 
                         player.teleportAsync(vanishTarget.location)
                         player.sendText {
-                            appendPrefix()
+                            appendSuccessPrefix()
                             success("Du bist nun wieder bei ${vanishTarget.name} .")
                         }
                     } else {
@@ -70,7 +70,7 @@ object HotkeyListener : PacketListenerAbstract() {
                     if (sneakCacheResult != null && System.currentTimeMillis() - sneakCacheResult < 1000) {
                         val previous = vanishService.previous(vanishPlayer) ?: run {
                             player.sendText {
-                                appendPrefix()
+                                appendErrorPrefix()
                                 error("Du hast noch keinen weiteren Spieler angeguckt.")
                             }
                             return
@@ -78,7 +78,7 @@ object HotkeyListener : PacketListenerAbstract() {
 
                         val vanishTarget = previous.bukkitPlayer ?: run {
                             player.sendText {
-                                appendPrefix()
+                                appendErrorPrefix()
                                 error("Der Spieler, dem du zuschauen möchtest, ist nicht mehr online.")
                             }
                             return
@@ -86,7 +86,7 @@ object HotkeyListener : PacketListenerAbstract() {
 
                         player.teleportAsync(vanishTarget.location)
                         player.sendText {
-                            appendPrefix()
+                            appendSuccessPrefix()
                             success("Du schaust nun wieder ${vanishTarget.name} zu.")
                         }
                         return
@@ -94,7 +94,7 @@ object HotkeyListener : PacketListenerAbstract() {
 
                     val next = vanishService.next(vanishPlayer) ?: run {
                         player.sendText {
-                            appendPrefix()
+                            appendErrorPrefix()
                             error("Du hast noch keinen weiteren Spieler angeguckt.")
                         }
                         return
@@ -102,7 +102,7 @@ object HotkeyListener : PacketListenerAbstract() {
 
                     val vanishTarget = next.bukkitPlayer ?: run {
                         player.sendText {
-                            appendPrefix()
+                            appendErrorPrefix()
                             error("Der Spieler, dem du zuschauen möchtest, ist nicht mehr online.")
                         }
                         return
@@ -110,7 +110,7 @@ object HotkeyListener : PacketListenerAbstract() {
 
                     player.teleportAsync(vanishTarget.location)
                     player.sendText {
-                        appendPrefix()
+                        appendSuccessPrefix()
                         success("Du schaust nun ${vanishTarget.name} zu.")
                     }
                 }

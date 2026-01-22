@@ -43,7 +43,7 @@ object ConnectionListener : Listener {
                     }
 
                 event.player.sendText {
-                    appendPrefix()
+                    appendInfoPrefix()
                     info("Du bist für andere Spieler unsichtbar.")
                 }
             }, 17)
