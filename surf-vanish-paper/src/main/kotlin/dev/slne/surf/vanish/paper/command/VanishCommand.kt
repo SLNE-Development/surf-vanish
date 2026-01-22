@@ -18,13 +18,13 @@ fun vanishCommand() = commandTree("vanish") {
         if (vanishPlayer.isVanished()) {
             vanishPlayer.reappear()
             player.sendText {
-                appendPrefix()
+                appendSuccessPrefix()
                 success("Du bist nun sichtbar.")
             }
         } else {
             vanishPlayer.vanish()
             player.sendText {
-                appendPrefix()
+                appendSuccessPrefix()
                 success("Du bist nun unsichtbar.")
             }
         }
@@ -38,7 +38,7 @@ fun vanishCommand() = commandTree("vanish") {
             }
 
             executor.sendText {
-                appendPrefix()
+                appendSuccessPrefix()
                 success("Die Konfiguration wurde neu geladen (${ms}ms)!")
             }
         }
