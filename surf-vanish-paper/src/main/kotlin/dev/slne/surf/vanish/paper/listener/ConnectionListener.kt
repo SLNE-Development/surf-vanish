@@ -8,6 +8,7 @@ import dev.slne.surf.vanish.paper.config.VanishConfiguration
 import dev.slne.surf.vanish.paper.plugin
 import dev.slne.surf.vanish.paper.util.VanishPermissionRegistry
 import dev.slne.surf.vanish.paper.util.bukkitPlayer
+import dev.slne.surf.vanish.paper.util.getVanishPriority
 import dev.slne.surf.vanish.paper.util.vanishPlayer
 import org.bukkit.Bukkit
 import org.bukkit.event.EventHandler
@@ -20,10 +21,16 @@ object ConnectionListener : Listener {
     @EventHandler(priority = EventPriority.HIGHEST)
     fun onConnect(event: PlayerJoinEvent) {
         val vanishPlayer = event.player.vanishPlayer
+        val joiningPlayerPriority = event.player.getVanishPriority()
 
+        // Hide vanished players from the joining player based on priority
         if (!event.player.hasPermission(VanishPermissionRegistry.VANISH_BYPASS)) {
-            vanishService.allOnline().forEach {
-                event.player.hidePlayer(plugin, it.bukkitPlayer)
+            vanishService.allOnline().forEach { vanishedPlayer ->
+                val vanishedPlayerPriority = vanishedPlayer.bukkitPlayer.getVanishPriority()
+                // Joining player can only see vanished players with lower priority
+                if (joiningPlayerPriority < vanishedPlayerPriority) {
+                    event.player.hidePlayer(plugin, vanishedPlayer.bukkitPlayer)
+                }
             }
         }
 
@@ -38,6 +45,7 @@ object ConnectionListener : Listener {
             Bukkit.getGlobalRegionScheduler().runDelayed(plugin, {
                 Bukkit.getOnlinePlayers()
                     .filterNot { it.hasPermission(VanishPermissionRegistry.VANISH_BYPASS) }
+                    .filter { it.getVanishPriority() < joiningPlayerPriority }
                     .forEach {
                         it.hidePlayer(plugin, event.player)
                     }

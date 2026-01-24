@@ -45,8 +45,11 @@ class VanishServiceImpl : VanishService, Services.Fallback {
 
         createAndShowScoreboard(player)
 
+        val vanishingPlayerPriority = player.bukkitPlayer.getVanishPriority()
+
         Bukkit.getOnlinePlayers()
             .filterNot { it.hasPermission(VanishPermissionRegistry.VANISH_BYPASS) }
+            .filter { it.getVanishPriority() < vanishingPlayerPriority }
             .filterNot { it.uniqueId == player.uuid }.forEach {
                 it.hidePlayer(
                     plugin,
@@ -76,8 +79,11 @@ class VanishServiceImpl : VanishService, Services.Fallback {
 
         hideAndDeleteScoreboard(player)
 
+        val reappearingPlayerPriority = player.bukkitPlayer.getVanishPriority()
+
         Bukkit.getOnlinePlayers()
             .filterNot { it.hasPermission(VanishPermissionRegistry.VANISH_BYPASS) }
+            .filter { it.getVanishPriority() < reappearingPlayerPriority }
             .filterNot { it.uniqueId == player.uuid }.forEach {
 
                 it.showPlayer(
