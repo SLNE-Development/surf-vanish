@@ -151,10 +151,11 @@ class VanishServiceImpl : VanishService, Services.Fallback {
             }
         }
 
+        val spectatorPriority = player.bukkitPlayer?.getVanishPriority() ?: 0
+        
         val next = _playerQueues[player.uuid]?.next(Bukkit.getOnlinePlayers().filterNot {
-            it.hasPermission(
-                VanishPermissionRegistry.VANISH_BYPASS
-            )
+            it.hasPermission(VanishPermissionRegistry.VANISH_BYPASS) || 
+            it.getVanishPriority() >= spectatorPriority
         }.map { it.uniqueId }.toObjectList())?.let {
             vanishPlayerService.getOfflinePlayer(it)
         }
