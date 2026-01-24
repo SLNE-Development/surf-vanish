@@ -18,3 +18,16 @@ val VanishOfflinePlayer.bukkitPlayer get() = Bukkit.getPlayer(this.uuid)
 val UUID.onlineName get() = Bukkit.getPlayer(this)?.name
 val UUID.bukkitPlayer get() = Bukkit.getPlayer(this)
 val UUID.vanishPlayer get() = vanishPlayerService.getPlayer(this)
+
+fun Player.getVanishPriority(): Int {
+    return effectivePermissions
+        .asSequence()
+        .filter { it.value }
+        .map { it.permission }
+        .filter { it.startsWith(VanishPermissionRegistry.VANISH_PRIORITY) }
+        .mapNotNull { 
+            it.removePrefix("${VanishPermissionRegistry.VANISH_PRIORITY}.")
+                .toIntOrNull() 
+        }
+        .maxOrNull() ?: 0
+}
