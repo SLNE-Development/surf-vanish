@@ -23,11 +23,9 @@ object ConnectionListener : Listener {
         val vanishPlayer = event.player.vanishPlayer
         val joiningPlayerPriority = event.player.getVanishPriority()
 
-        // Hide vanished players from the joining player based on priority
         if (!event.player.hasPermission(VanishPermissionRegistry.VANISH_BYPASS)) {
             vanishService.allOnline().forEach { vanishedPlayer ->
                 val vanishedPlayerPriority = vanishedPlayer.bukkitPlayer.getVanishPriority()
-                // Joining player can only see vanished players with lower priority
                 if (joiningPlayerPriority < vanishedPlayerPriority) {
                     event.player.hidePlayer(plugin, vanishedPlayer.bukkitPlayer)
                 }

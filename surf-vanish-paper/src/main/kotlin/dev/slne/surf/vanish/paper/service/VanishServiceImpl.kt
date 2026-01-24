@@ -48,22 +48,31 @@ class VanishServiceImpl : VanishService, Services.Fallback {
         val vanishingPlayerPriority = player.bukkitPlayer.getVanishPriority()
 
         Bukkit.getOnlinePlayers()
-            .filterNot { it.hasPermission(VanishPermissionRegistry.VANISH_BYPASS) }
-            .filter { it.getVanishPriority() < vanishingPlayerPriority }
-            .filterNot { it.uniqueId == player.uuid }.forEach {
-                it.hidePlayer(
-                    plugin,
-                    player.bukkitPlayer
-                )
+            .filterNot { it.uniqueId == player.uuid }.forEach { onlinePlayer ->
+                if (!onlinePlayer.hasPermission(VanishPermissionRegistry.VANISH_BYPASS)) {
+                    if (onlinePlayer.getVanishPriority() < vanishingPlayerPriority) {
+                        onlinePlayer.hidePlayer(plugin, player.bukkitPlayer)
 
-                if (config.spoofConnectionMessages) {
-                    it.sendText {
-                        append(
-                            MiniPlaceholdersHook.parse(
-                                player.bukkitPlayer,
-                                config.fakeDisconnectMessage
-                            )
-                        )
+                        if (config.spoofConnectionMessages) {
+                            onlinePlayer.sendText {
+                                append(
+                                    MiniPlaceholdersHook.parse(
+                                        player.bukkitPlayer,
+                                        config.fakeDisconnectMessage
+                                    )
+                                )
+                            }
+                        }
+                    } else {
+                        onlinePlayer.sendText {
+                            appendInfoPrefix()
+                            info("${player.name} ist nun unsichtbar.")
+                        }
+                    }
+                } else {
+                    onlinePlayer.sendText {
+                        appendInfoPrefix()
+                        info("${player.name} ist nun unsichtbar.")
                     }
                 }
             }
@@ -82,29 +91,37 @@ class VanishServiceImpl : VanishService, Services.Fallback {
         val reappearingPlayerPriority = player.bukkitPlayer.getVanishPriority()
 
         Bukkit.getOnlinePlayers()
-            .filterNot { it.hasPermission(VanishPermissionRegistry.VANISH_BYPASS) }
-            .filter { it.getVanishPriority() < reappearingPlayerPriority }
-            .filterNot { it.uniqueId == player.uuid }.forEach {
+            .filterNot { it.uniqueId == player.uuid }.forEach { onlinePlayer ->
+                if (!onlinePlayer.hasPermission(VanishPermissionRegistry.VANISH_BYPASS)) {
+                    if (onlinePlayer.getVanishPriority() < reappearingPlayerPriority) {
+                        onlinePlayer.showPlayer(plugin, player.bukkitPlayer)
 
-                it.showPlayer(
-                    plugin,
-                    player.bukkitPlayer
-                )
-
-                redisApi.publishEvent(
-                    TabEntryUpdateRedisEvent(
-                        player.uuid
-                    )
-                )
-
-                if (config.spoofConnectionMessages) {
-                    it.sendText {
-                        append(
-                            MiniPlaceholdersHook.parse(
-                                player.bukkitPlayer,
-                                config.fakeConnectMessage
+                        redisApi.publishEvent(
+                            TabEntryUpdateRedisEvent(
+                                player.uuid
                             )
                         )
+
+                        if (config.spoofConnectionMessages) {
+                            onlinePlayer.sendText {
+                                append(
+                                    MiniPlaceholdersHook.parse(
+                                        player.bukkitPlayer,
+                                        config.fakeConnectMessage
+                                    )
+                                )
+                            }
+                        }
+                    } else {
+                        onlinePlayer.sendText {
+                            appendInfoPrefix()
+                            info("${player.name} ist nun sichtbar.")
+                        }
+                    }
+                } else {
+                    onlinePlayer.sendText {
+                        appendInfoPrefix()
+                        info("${player.name} ist nun sichtbar.")
                     }
                 }
             }
