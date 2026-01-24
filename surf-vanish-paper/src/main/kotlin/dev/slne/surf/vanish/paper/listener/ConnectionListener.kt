@@ -42,10 +42,22 @@ object ConnectionListener : Listener {
 
             Bukkit.getGlobalRegionScheduler().runDelayed(plugin, {
                 Bukkit.getOnlinePlayers()
-                    .filterNot { it.hasPermission(VanishPermissionRegistry.VANISH_BYPASS) }
-                    .filter { it.getVanishPriority() < joiningPlayerPriority }
-                    .forEach {
-                        it.hidePlayer(plugin, event.player)
+                    .filterNot { it.uniqueId == event.player.uniqueId }.forEach { onlinePlayer ->
+                        if (!onlinePlayer.hasPermission(VanishPermissionRegistry.VANISH_BYPASS)) {
+                            if (onlinePlayer.getVanishPriority() < joiningPlayerPriority) {
+                                onlinePlayer.hidePlayer(plugin, event.player)
+                            } else {
+                                onlinePlayer.sendText {
+                                    appendInfoPrefix()
+                                    info("${event.player.name} ist beigetreten (unsichtbar).")
+                                }
+                            }
+                        } else {
+                            onlinePlayer.sendText {
+                                appendInfoPrefix()
+                                info("${event.player.name} ist beigetreten (unsichtbar).")
+                            }
+                        }
                     }
 
                 event.player.sendText {
@@ -64,6 +76,19 @@ object ConnectionListener : Listener {
 
         if (vanishPlayer.isVanished()) {
             event.quitMessage(null)
+            
+            val leavingPlayerPriority = event.player.getVanishPriority()
+            
+            Bukkit.getOnlinePlayers()
+                .filterNot { it.uniqueId == event.player.uniqueId }.forEach { onlinePlayer ->
+                    if (onlinePlayer.hasPermission(VanishPermissionRegistry.VANISH_BYPASS) || 
+                        onlinePlayer.getVanishPriority() > leavingPlayerPriority) {
+                        onlinePlayer.sendText {
+                            appendInfoPrefix()
+                            info("${event.player.name} hat den Server verlassen (war unsichtbar).")
+                        }
+                    }
+                }
         }
     }
 }
