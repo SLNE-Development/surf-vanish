@@ -49,13 +49,15 @@ object ConnectionListener : Listener {
                             } else {
                                 onlinePlayer.sendText {
                                     appendInfoPrefix()
-                                    info("${event.player.name} ist beigetreten (unsichtbar).")
+                                    variableValue(event.player.name)
+                                    info(" hat den Server unsichtbar betreten.")
                                 }
                             }
                         } else {
                             onlinePlayer.sendText {
                                 appendInfoPrefix()
-                                info("${event.player.name} ist beigetreten (unsichtbar).")
+                                variableValue(event.player.name)
+                                info(" hat den Server unsichtbar betreten.")
                             }
                         }
                     }
@@ -76,16 +78,18 @@ object ConnectionListener : Listener {
 
         if (vanishPlayer.isVanished()) {
             event.quitMessage(null)
-            
+
             val leavingPlayerPriority = event.player.getVanishPriority()
-            
+
             Bukkit.getOnlinePlayers()
                 .filterNot { it.uniqueId == event.player.uniqueId }.forEach { onlinePlayer ->
-                    if (onlinePlayer.hasPermission(VanishPermissionRegistry.VANISH_BYPASS) || 
-                        onlinePlayer.getVanishPriority() > leavingPlayerPriority) {
+                    if (onlinePlayer.hasPermission(VanishPermissionRegistry.VANISH_BYPASS) ||
+                        onlinePlayer.getVanishPriority() > leavingPlayerPriority
+                    ) {
                         onlinePlayer.sendText {
                             appendInfoPrefix()
-                            info("${event.player.name} hat den Server verlassen (war unsichtbar).")
+                            variableValue(event.player.name)
+                            info(" hat den Server unsichtbar verlassen.")
                         }
                     }
                 }
