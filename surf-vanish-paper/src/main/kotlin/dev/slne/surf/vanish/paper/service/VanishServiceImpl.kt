@@ -185,7 +185,7 @@ class VanishServiceImpl : VanishService, Services.Fallback {
                 buildText {
                     spacer(
                         player.currentTarget?.bukkitPlayer?.name?.toSmallCaps()
-                            ?: "Unbekannt".toSmallCaps()
+                            ?: "Kein Spieler".toSmallCaps()
                     )
                 }
             }

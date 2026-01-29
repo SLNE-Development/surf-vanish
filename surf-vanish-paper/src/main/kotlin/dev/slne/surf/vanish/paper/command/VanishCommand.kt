@@ -4,6 +4,7 @@ import dev.jorel.commandapi.kotlindsl.anyExecutor
 import dev.jorel.commandapi.kotlindsl.commandTree
 import dev.jorel.commandapi.kotlindsl.literalArgument
 import dev.jorel.commandapi.kotlindsl.playerExecutor
+import dev.slne.surf.surfapi.core.api.font.toSmallCaps
 import dev.slne.surf.surfapi.core.api.messages.adventure.sendText
 import dev.slne.surf.vanish.paper.plugin
 import dev.slne.surf.vanish.paper.util.VanishPermissionRegistry
@@ -27,7 +28,7 @@ fun vanishCommand() = commandTree("vanish") {
 
             player.sendText {
                 appendNewInfoPrefixedLine()
-                spacer("-".repeat(10))
+                darkSpacer("-".repeat(25))
 
                 appendNewInfoPrefixedLine()
 
@@ -37,24 +38,27 @@ fun vanishCommand() = commandTree("vanish") {
                 appendNewInfoPrefixedLine()
 
                 appendNewInfoPrefixedLine()
-                primary("Zurück: ")
+                spacer("Spectate-Modus Steuerung:".toSmallCaps())
+
+                appendNewInfoPrefixedLine()
+                note("Zurück: ")
                 displayKey("sneak")
                 spacer(" + ")
                 displayKey("swapOffhand")
-                
+
                 appendNewInfoPrefixedLine()
-                primary("Weiter: ")
+                note("Weiter: ")
                 displayKey("swapOffhand")
 
                 appendNewInfoPrefixedLine()
-                primary("Teleport: ")
+                note("Teleport: ")
                 white("2x ")
                 displayKey("sneak")
 
                 appendNewInfoPrefixedLine()
 
                 appendNewInfoPrefixedLine()
-                spacer("-".repeat(10))
+                darkSpacer("-".repeat(25))
             }
         }
     }
