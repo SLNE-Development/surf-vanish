@@ -71,7 +71,7 @@ object HotkeyListener : PacketListenerAbstract() {
                         val previous = vanishService.previous(vanishPlayer) ?: run {
                             player.sendText {
                                 appendErrorPrefix()
-                                error("Du hast noch keinen weiteren Spieler angeguckt.")
+                                error("Es wurde kein Spieler gefunden, den du zuvor angeschaut hast.")
                             }
                             return
                         }
@@ -95,7 +95,7 @@ object HotkeyListener : PacketListenerAbstract() {
                     val next = vanishService.next(vanishPlayer) ?: run {
                         player.sendText {
                             appendErrorPrefix()
-                            error("Du hast noch keinen weiteren Spieler angeguckt.")
+                            error("Es wurde kein weiterer Spieler gefunden, dem du zuschauen könntest.")
                         }
                         return
                     }
