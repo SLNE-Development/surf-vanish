@@ -267,11 +267,11 @@ class VanishServiceImpl : VanishService, Services.Fallback {
 }
 
 fun markVanished(player: UUID) {
-    redisApi.publishEvent(VanishStateUpdateRedisEvent(player, true))
     redisLoader.vanishedPlayers.add(player)
+    redisApi.publishEvent(VanishStateUpdateRedisEvent(player, true))
 }
 
 fun markReappeared(player: UUID) {
-    redisApi.publishEvent(VanishStateUpdateRedisEvent(player, false))
     redisLoader.vanishedPlayers.remove(player)
+    redisApi.publishEvent(VanishStateUpdateRedisEvent(player, false))
 }
