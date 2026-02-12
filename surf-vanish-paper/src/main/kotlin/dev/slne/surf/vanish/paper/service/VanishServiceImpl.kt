@@ -15,6 +15,7 @@ import dev.slne.surf.surfapi.core.api.util.toObjectSet
 import dev.slne.surf.tab.api.redis.TabEntryUpdateRedisEvent
 import dev.slne.surf.vanish.api.player.VanishOfflinePlayer
 import dev.slne.surf.vanish.api.player.VanishPlayer
+import dev.slne.surf.vanish.api.redis.VanishStateUpdateRedisEvent
 import dev.slne.surf.vanish.core.service.VanishService
 import dev.slne.surf.vanish.core.service.vanishPlayerService
 import dev.slne.surf.vanish.core.service.vanishService
@@ -23,6 +24,7 @@ import dev.slne.surf.vanish.paper.config.VanishConfiguration
 import dev.slne.surf.vanish.paper.hook.MiniPlaceholdersHook
 import dev.slne.surf.vanish.paper.plugin
 import dev.slne.surf.vanish.paper.redisApi
+import dev.slne.surf.vanish.paper.redisLoader
 import dev.slne.surf.vanish.paper.util.*
 import io.papermc.paper.threadedregions.scheduler.ScheduledTask
 import it.unimi.dsi.fastutil.objects.ObjectSet
@@ -42,6 +44,8 @@ class VanishServiceImpl : VanishService, Services.Fallback {
     override fun vanish(player: VanishPlayer) {
         _vanishedPlayers.add(player.uuid)
         _playerQueues[player.uuid] = AuditableQueue()
+
+        markVanished(player.uuid)
 
         createAndShowScoreboard(player)
 
@@ -84,6 +88,8 @@ class VanishServiceImpl : VanishService, Services.Fallback {
         current(player)?.bukkitPlayer?.let { currentPlayer ->
             glowingApi.removeGlowing(currentPlayer, player.bukkitPlayer)
         }
+
+        markReappeared(player.uuid)
 
         _vanishedPlayers.remove(player.uuid)
         _playerQueues.remove(player.uuid)
@@ -258,4 +264,14 @@ class VanishServiceImpl : VanishService, Services.Fallback {
             }
         }
     }
+}
+
+fun markVanished(player: UUID) {
+    redisApi.publishEvent(VanishStateUpdateRedisEvent(player, true))
+    redisLoader.vanishedPlayers.add(player)
+}
+
+fun markReappeared(player: UUID) {
+    redisApi.publishEvent(VanishStateUpdateRedisEvent(player, false))
+    redisLoader.vanishedPlayers.remove(player)
 }
