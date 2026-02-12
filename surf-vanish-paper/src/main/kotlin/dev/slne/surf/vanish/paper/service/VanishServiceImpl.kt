@@ -160,8 +160,8 @@ class VanishServiceImpl : VanishService, Services.Fallback {
         val spectatorPriority = player.bukkitPlayer?.getVanishPriority() ?: 0
 
         val next = _playerQueues[player.uuid]?.next(Bukkit.getOnlinePlayers().filterNot {
-            it.hasPermission(VanishPermissionRegistry.VANISH_BYPASS) || 
-            it.getVanishPriority() >= spectatorPriority
+            it.hasPermission(VanishPermissionRegistry.VANISH_BYPASS) ||
+                    it.getVanishPriority() >= spectatorPriority
         }.map { it.uniqueId }.toObjectList())?.let {
             vanishPlayerService.getOfflinePlayer(it)
         }
@@ -191,7 +191,7 @@ class VanishServiceImpl : VanishService, Services.Fallback {
                 buildText {
                     spacer(
                         player.currentTarget?.bukkitPlayer?.name?.toSmallCaps()
-                            ?: "Unbekannt".toSmallCaps()
+                            ?: "Kein Spieler".toSmallCaps()
                     )
                 }
             }
@@ -252,18 +252,7 @@ class VanishServiceImpl : VanishService, Services.Fallback {
             actionbarTask = Bukkit.getAsyncScheduler().runAtFixedRate(plugin, {
                 vanishService.allOnline().forEach {
                     it.bukkitPlayer.sendActionBar(buildText {
-                        info("Zurück: ")
-                        displayKey("sneak")
-                        info(" + ")
-                        displayKey("swapOffhand")
-                        darkSpacer(" - ")
-                        primary("Du bist unsichtbar!")
-                        darkSpacer(" - ")
-                        info(" Weiter: ")
-                        displayKey("swapOffhand")
-                        darkSpacer(" - ")
-                        info("Teleport: 2x ")
-                        displayKey("sneak")
+                        note("Du bist für andere Spieler unsichtbar.")
                     })
                 }
             }, 0L, 1, TimeUnit.SECONDS)
