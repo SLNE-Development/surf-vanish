@@ -12,6 +12,7 @@ interface SurfVanishApi {
 
     fun isVanished(player: VanishOfflinePlayer): Boolean
     fun vanishedPlayers(): ObjectSet<VanishOfflinePlayer>
+    fun onlineVanishedPlayersUuid(): ObjectSet<UUID>
 
     fun getPlayer(name: String): VanishPlayer?
     fun getPlayer(uuid: UUID): VanishPlayer?

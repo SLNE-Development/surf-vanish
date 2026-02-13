@@ -1,6 +1,7 @@
 package dev.slne.surf.vanish.core.api
 
 import com.google.auto.service.AutoService
+import dev.slne.surf.surfapi.core.api.util.toObjectSet
 import dev.slne.surf.vanish.api.SurfVanishApi
 import dev.slne.surf.vanish.api.player.VanishOfflinePlayer
 import dev.slne.surf.vanish.api.player.VanishPlayer
@@ -15,6 +16,8 @@ class SurfVanishApiImpl : SurfVanishApi, Services.Fallback {
     override fun reappear(player: VanishPlayer) = vanishService.reappear(player)
     override fun isVanished(player: VanishOfflinePlayer) = vanishService.isVanished(player)
     override fun vanishedPlayers() = vanishService.all()
+    override fun onlineVanishedPlayersUuid() =
+        vanishService.allOnline().map { it.uuid }.toObjectSet()
 
     override fun getPlayer(name: String) = vanishPlayerService.getPlayer(name)
     override fun getPlayer(uuid: UUID) = vanishPlayerService.getPlayer(uuid)
