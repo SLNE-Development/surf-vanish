@@ -1,6 +1,7 @@
 package dev.slne.surf.vanish.paper.service
 
 import com.google.auto.service.AutoService
+import dev.slne.surf.core.api.common.server.SurfServer
 import dev.slne.surf.surfapi.bukkit.api.glow.glowingApi
 import dev.slne.surf.surfapi.bukkit.api.scoreboard.ObsoleteScoreboardApi
 import dev.slne.surf.surfapi.bukkit.api.scoreboard.SurfScoreboard
@@ -267,11 +268,18 @@ class VanishServiceImpl : VanishService, Services.Fallback {
 }
 
 fun markVanished(player: UUID) {
-    redisLoader.vanishedPlayers.add(player)
+    redisLoader.vanishedPlayers.put(
+        SurfServer.current().name,
+        (redisLoader.vanishedPlayers[SurfServer.current().name] ?: mutableListOf()) + player
+    )
     redisApi.publishEvent(VanishStateUpdateRedisEvent(player, true))
 }
 
 fun markReappeared(player: UUID) {
-    redisLoader.vanishedPlayers.remove(player)
+    redisLoader.vanishedPlayers.put(
+        SurfServer.current().name,
+        (redisLoader.vanishedPlayers[SurfServer.current().name]
+            ?: mutableListOf()).filterNot { it == player }
+    )
     redisApi.publishEvent(VanishStateUpdateRedisEvent(player, false))
 }

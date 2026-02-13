@@ -12,6 +12,7 @@ surfPaperPluginApi {
     authors.add("red")
 
     withSurfRedis()
+    withCorePaper()
 
     serverDependencies {
         registerSoft("MiniPlaceholders")
