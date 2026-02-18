@@ -53,7 +53,11 @@ object HotkeyListener : PacketListenerAbstract() {
                         player.teleportAsync(vanishTarget.location)
                         player.sendText {
                             appendSuccessPrefix()
-                            success("Du bist nun wieder bei ${vanishTarget.name} .")
+                            success("Du bist nun wieder bei")
+                            appendSpace()
+                            variableValue(vanishTarget.name)
+                            success(".")
+
                         }
                     } else {
                         _lastSneaks[player.uniqueId] = now
@@ -87,7 +91,11 @@ object HotkeyListener : PacketListenerAbstract() {
                         player.teleportAsync(vanishTarget.location)
                         player.sendText {
                             appendSuccessPrefix()
-                            success("Du schaust nun wieder ${vanishTarget.name} zu.")
+                            success("Du schaust nun wieder")
+                            appendSpace()
+                            variableValue(vanishTarget.name)
+                            appendSpace()
+                            success("zu.")
                         }
                         return
                     }
@@ -111,7 +119,11 @@ object HotkeyListener : PacketListenerAbstract() {
                     player.teleportAsync(vanishTarget.location)
                     player.sendText {
                         appendSuccessPrefix()
-                        success("Du schaust nun ${vanishTarget.name} zu.")
+                        success("Du schaust nun")
+                        appendSpace()
+                        variableValue(vanishTarget.name)
+                        appendSpace()
+                        success(" zu.")
                     }
                 }
             }
