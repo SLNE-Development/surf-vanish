@@ -1,6 +1,7 @@
 package dev.slne.surf.vanish.paper.command
 
 import dev.jorel.commandapi.kotlindsl.anyExecutor
+import dev.jorel.commandapi.kotlindsl.commandAPICommand
 import dev.jorel.commandapi.kotlindsl.commandTree
 import dev.jorel.commandapi.kotlindsl.literalArgument
 import dev.jorel.commandapi.kotlindsl.playerExecutor
@@ -13,7 +14,7 @@ import dev.slne.surf.vanish.paper.util.displayKey
 import dev.slne.surf.vanish.paper.util.vanishPlayer
 import kotlin.system.measureTimeMillis
 
-fun vanishCommand() = commandTree("vanish") {
+fun vanishCommand() = commandAPICommand("vanish") {
     withPermission(VanishPermissionRegistry.VANISH_COMMAND)
     teleportHelperCommand()
     playerExecutor { player, _ ->
