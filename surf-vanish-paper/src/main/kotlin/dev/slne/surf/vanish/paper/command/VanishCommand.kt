@@ -6,7 +6,7 @@ import dev.jorel.commandapi.kotlindsl.literalArgument
 import dev.jorel.commandapi.kotlindsl.playerExecutor
 import dev.slne.surf.surfapi.core.api.font.toSmallCaps
 import dev.slne.surf.surfapi.core.api.messages.adventure.sendText
-import dev.slne.surf.vanish.paper.command.subcommands.teleportHelperCommand
+import dev.slne.surf.vanish.paper.listener.HotkeyListener
 import dev.slne.surf.vanish.paper.plugin
 import dev.slne.surf.vanish.paper.util.VanishPermissionRegistry
 import dev.slne.surf.vanish.paper.util.displayKey
@@ -15,7 +15,21 @@ import kotlin.system.measureTimeMillis
 
 fun vanishCommand() = commandTree("vanish") {
     withPermission(VanishPermissionRegistry.VANISH_COMMAND)
-    teleportHelperCommand()
+
+    literalArgument("toggle-teleport") {
+        playerExecutor { player, _ ->
+            val newState = HotkeyListener.toggleTeleportHelper(player.uniqueId)
+
+            player.sendText {
+                appendSuccessPrefix()
+                if (newState) {
+                    success("Der Teleport-Helfer wurde aktiviert.")
+                } else {
+                    success("Der Teleport-Helfer wurde deaktiviert.")
+                }
+            }
+        }
+    }
     playerExecutor { player, _ ->
         val vanishPlayer = player.vanishPlayer
 
