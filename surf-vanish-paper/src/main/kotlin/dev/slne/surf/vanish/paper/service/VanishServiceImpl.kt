@@ -43,6 +43,7 @@ class VanishServiceImpl : VanishService, Services.Fallback {
     private val _playerLogoutLocation: MutableMap<UUID, Location> = ConcurrentHashMap()
     private val _playerQueues: MutableMap<UUID, AuditableQueue> = ConcurrentHashMap()
     private val _scoreboards: MutableMap<UUID, SurfScoreboard> = ConcurrentHashMap()
+    private val _playerFlyStates: MutableMap<UUID, Boolean> = ConcurrentHashMap()
 
 
     override fun vanish(player: VanishPlayer) {
@@ -103,7 +104,7 @@ class VanishServiceImpl : VanishService, Services.Fallback {
 
         val logoutLocation = _playerLogoutLocation[player.uuid] ?: server.worlds.first().spawnLocation.clone()
         _playerLogoutLocation.remove(player.uuid)
-        if(!player.bukkitPlayer.hasPermission(VanishPermissionRegistry.VANISH_NOCK_BACK_TP)) {
+        if (!player.bukkitPlayer.hasPermission(VanishPermissionRegistry.VANISH_NOCK_BACK_TP)) {
             player.bukkitPlayer.teleportAsync(logoutLocation)
         }
 
@@ -252,6 +253,14 @@ class VanishServiceImpl : VanishService, Services.Fallback {
     override fun hideAndDeleteScoreboard(player: VanishPlayer) {
         _scoreboards[player.uuid]?.disable()
         _scoreboards.remove(player.uuid)
+    }
+
+    override fun setFlyState(uuid: UUID, canFly: Boolean) {
+        _playerFlyStates[uuid] = canFly
+    }
+
+    override fun getFlyState(uuid: UUID): Boolean {
+        return _playerFlyStates[uuid] ?: false
     }
 
     companion object {

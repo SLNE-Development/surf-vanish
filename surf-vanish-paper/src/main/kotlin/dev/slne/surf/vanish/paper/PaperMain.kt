@@ -7,6 +7,7 @@ import dev.slne.surf.vanish.paper.command.vanishCommand
 import dev.slne.surf.vanish.paper.config.VanishConfiguration
 import dev.slne.surf.vanish.paper.listener.AdvancementListener
 import dev.slne.surf.vanish.paper.listener.ConnectionListener
+import dev.slne.surf.vanish.paper.listener.GameModeChangeListener
 import dev.slne.surf.vanish.paper.listener.HotkeyListener
 import dev.slne.surf.vanish.paper.listener.SilencePlayerListener
 import dev.slne.surf.vanish.paper.service.VanishServiceImpl
@@ -19,6 +20,7 @@ class PaperMain : SuspendingJavaPlugin() {
         ConnectionListener.register()
         SilencePlayerListener.register()
         AdvancementListener.register()
+        GameModeChangeListener.register()
         PacketEvents.getAPI().eventManager.registerListener(HotkeyListener)
 
         vanishCommand()

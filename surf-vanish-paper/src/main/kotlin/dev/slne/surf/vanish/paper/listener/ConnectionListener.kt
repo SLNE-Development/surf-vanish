@@ -23,6 +23,13 @@ object ConnectionListener : Listener {
         val vanishPlayer = event.player.vanishPlayer
         val joiningPlayerPriority = event.player.getVanishPriority()
 
+        if(event.player.hasPermission(VanishPermissionRegistry.VANISH_SAVE_FLY_STATE)) {
+            if(vanishService.getFlyState(event.player.uniqueId)) {
+                event.player.allowFlight = true
+                event.player.isFlying = true
+            }
+        }
+
         if (!event.player.hasPermission(VanishPermissionRegistry.VANISH_BYPASS)) {
             vanishService.allOnline().forEach { vanishedPlayer ->
                 val vanishedPlayerPriority = vanishedPlayer.bukkitPlayer.getVanishPriority()
@@ -73,6 +80,7 @@ object ConnectionListener : Listener {
         val vanishPlayer = vanishPlayerService.getPlayer(event.player.uniqueId, event.player.name)
 
         vanishService.hideAndDeleteScoreboard(vanishPlayer)
+        vanishService.setFlyState(event.player.uniqueId, event.player.isFlying)
 
         if (vanishPlayer.isVanished()) {
             event.quitMessage(null)
