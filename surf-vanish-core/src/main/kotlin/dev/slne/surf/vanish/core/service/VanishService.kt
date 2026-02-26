@@ -4,6 +4,7 @@ import dev.slne.surf.surfapi.core.api.util.requiredService
 import dev.slne.surf.vanish.api.player.VanishOfflinePlayer
 import dev.slne.surf.vanish.api.player.VanishPlayer
 import it.unimi.dsi.fastutil.objects.ObjectSet
+import java.util.UUID
 
 interface VanishService {
     fun vanish(player: VanishPlayer)
@@ -15,6 +16,9 @@ interface VanishService {
     fun previous(player: VanishOfflinePlayer): VanishOfflinePlayer?
     fun next(player: VanishOfflinePlayer): VanishOfflinePlayer?
     fun current(player: VanishOfflinePlayer): VanishOfflinePlayer?
+
+    fun setFlyState(uuid: UUID, canFly: Boolean)
+    fun getFlyState(uuid: UUID): Boolean
 
     fun createAndShowScoreboard(player: VanishPlayer)
     fun hideAndDeleteScoreboard(player: VanishPlayer)
