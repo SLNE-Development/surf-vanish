@@ -17,6 +17,9 @@ interface VanishService {
     fun next(player: VanishOfflinePlayer): VanishOfflinePlayer?
     fun current(player: VanishOfflinePlayer): VanishOfflinePlayer?
 
+    fun setFlyState(uuid: UUID, canFly: Boolean)
+    fun getFlyState(uuid: UUID): Boolean
+
     fun createAndShowScoreboard(player: VanishPlayer)
     fun hideAndDeleteScoreboard(player: VanishPlayer)
 

@@ -127,7 +127,7 @@ object HotkeyListener : PacketListenerAbstract() {
                         appendSpace()
                         variableValue(vanishTarget.name)
                         appendSpace()
-                        success(" zu.")
+                        success("zu.")
                     }
                 }
             }

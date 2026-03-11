@@ -33,6 +33,7 @@ import net.kyori.adventure.text.format.TextDecoration
 import net.kyori.adventure.util.Services
 import org.bukkit.Bukkit
 import java.util.*
+import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.TimeUnit
 
 @OptIn(ObsoleteScoreboardApi::class)
@@ -42,6 +43,7 @@ class VanishServiceImpl : VanishService, Services.Fallback {
     private val _playerQueues = mutableObject2ObjectMapOf<UUID, AuditableQueue>()
     private val _scoreboards = mutableObject2ObjectMapOf<UUID, SurfScoreboard>()
     private val _spectateModePlayers = mutableObjectSetOf<UUID>()
+    private val _playerFlyStates = mutableObject2ObjectMapOf<UUID, Boolean>()
 
     override fun vanish(player: VanishPlayer) {
         _vanishedPlayers.add(player.uuid)
@@ -243,6 +245,14 @@ class VanishServiceImpl : VanishService, Services.Fallback {
     override fun hideAndDeleteScoreboard(player: VanishPlayer) {
         _scoreboards[player.uuid]?.disable()
         _scoreboards.remove(player.uuid)
+    }
+
+    override fun setFlyState(uuid: UUID, canFly: Boolean) {
+        _playerFlyStates[uuid] = canFly
+    }
+
+    override fun getFlyState(uuid: UUID): Boolean {
+        return _playerFlyStates[uuid] ?: false
     }
 
     override fun isSpectating(playerUuid: UUID) = _spectateModePlayers.contains(playerUuid)

@@ -8,5 +8,7 @@ object VanishPermissionRegistry : PermissionRegistry() {
     val VANISH_COMMAND = create("$BASE.command")
     val VANISH_COMMAND_RELOAD = create("$VANISH_COMMAND.reload")
 
+    val VANISH_SAVE_FLY_STATE = create("$BASE.save-fly-state")
+
     val VANISH_PRIORITY = create("$BASE.priority")
 }

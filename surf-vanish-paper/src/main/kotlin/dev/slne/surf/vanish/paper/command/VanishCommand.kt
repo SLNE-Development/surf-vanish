@@ -14,6 +14,7 @@ import kotlin.system.measureTimeMillis
 
 fun vanishCommand() = commandTree("vanish") {
     withPermission(VanishPermissionRegistry.VANISH_COMMAND)
+
     playerExecutor { player, _ ->
         val vanishPlayer = player.vanishPlayer
 
