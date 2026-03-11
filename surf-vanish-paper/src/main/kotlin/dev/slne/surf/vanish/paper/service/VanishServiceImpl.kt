@@ -9,8 +9,6 @@ import dev.slne.surf.surfapi.bukkit.api.surfBukkitApi
 import dev.slne.surf.surfapi.core.api.font.toSmallCaps
 import dev.slne.surf.surfapi.core.api.messages.adventure.buildText
 import dev.slne.surf.surfapi.core.api.messages.adventure.sendText
-import dev.slne.surf.surfapi.core.api.util.mutableObject2ObjectMapOf
-import dev.slne.surf.surfapi.core.api.util.mutableObjectSetOf
 import dev.slne.surf.surfapi.core.api.util.toObjectList
 import dev.slne.surf.surfapi.core.api.util.toObjectSet
 import dev.slne.surf.tab.api.redis.TabEntryUpdateRedisEvent
@@ -27,6 +25,7 @@ import dev.slne.surf.vanish.paper.plugin
 import dev.slne.surf.vanish.paper.redisApi
 import dev.slne.surf.vanish.paper.redisLoader
 import dev.slne.surf.vanish.paper.util.*
+import io.ktor.util.collections.*
 import io.papermc.paper.threadedregions.scheduler.ScheduledTask
 import it.unimi.dsi.fastutil.objects.ObjectSet
 import net.kyori.adventure.text.format.TextDecoration
@@ -39,11 +38,11 @@ import java.util.concurrent.TimeUnit
 @OptIn(ObsoleteScoreboardApi::class)
 @AutoService(VanishService::class)
 class VanishServiceImpl : VanishService, Services.Fallback {
-    private val _vanishedPlayers = mutableObjectSetOf<UUID>()
-    private val _playerQueues = mutableObject2ObjectMapOf<UUID, AuditableQueue>()
-    private val _scoreboards = mutableObject2ObjectMapOf<UUID, SurfScoreboard>()
-    private val _spectateModePlayers = mutableObjectSetOf<UUID>()
-    private val _playerFlyStates = mutableObject2ObjectMapOf<UUID, Boolean>()
+    private val _vanishedPlayers = ConcurrentSet<UUID>()
+    private val _playerQueues = ConcurrentHashMap<UUID, AuditableQueue>()
+    private val _scoreboards = ConcurrentHashMap<UUID, SurfScoreboard>()
+    private val _spectateModePlayers = ConcurrentSet<UUID>()
+    private val _playerFlyStates = ConcurrentHashMap<UUID, Boolean>()
 
     override fun vanish(player: VanishPlayer) {
         _vanishedPlayers.add(player.uuid)
