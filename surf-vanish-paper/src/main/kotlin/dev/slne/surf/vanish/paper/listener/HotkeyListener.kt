@@ -25,6 +25,10 @@ object HotkeyListener : PacketListenerAbstract() {
             return
         }
 
+        if (!vanishService.isSpectating(player.uniqueId)) {
+            return
+        }
+
         when (event.packetType) {
             PacketType.Play.Client.PLAYER_INPUT -> {
                 val packet = WrapperPlayClientPlayerInput(event)
