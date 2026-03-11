@@ -4,6 +4,7 @@ import dev.slne.surf.surfapi.core.api.util.requiredService
 import dev.slne.surf.vanish.api.player.VanishOfflinePlayer
 import dev.slne.surf.vanish.api.player.VanishPlayer
 import it.unimi.dsi.fastutil.objects.ObjectSet
+import java.util.*
 
 interface VanishService {
     fun vanish(player: VanishPlayer)
@@ -18,6 +19,10 @@ interface VanishService {
 
     fun createAndShowScoreboard(player: VanishPlayer)
     fun hideAndDeleteScoreboard(player: VanishPlayer)
+
+    fun isSpectating(playerUuid: UUID): Boolean
+    fun startSpectateMode(player: VanishPlayer)
+    fun stopSpectateMode(player: VanishPlayer)
 
     companion object {
         val INSTANCE = requiredService<VanishService>()

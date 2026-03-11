@@ -41,6 +41,7 @@ class VanishServiceImpl : VanishService, Services.Fallback {
     private val _vanishedPlayers = mutableObjectSetOf<UUID>()
     private val _playerQueues = mutableObject2ObjectMapOf<UUID, AuditableQueue>()
     private val _scoreboards = mutableObject2ObjectMapOf<UUID, SurfScoreboard>()
+    private val _spectateModePlayers = mutableObjectSetOf<UUID>()
 
     override fun vanish(player: VanishPlayer) {
         _vanishedPlayers.add(player.uuid)
@@ -48,7 +49,9 @@ class VanishServiceImpl : VanishService, Services.Fallback {
 
         markVanished(player.uuid)
 
-        createAndShowScoreboard(player)
+        if (isSpectating(player.uuid)) {
+            createAndShowScoreboard(player)
+        }
 
         val vanishingPlayerPriority = player.bukkitPlayer.getVanishPriority()
 
@@ -240,6 +243,48 @@ class VanishServiceImpl : VanishService, Services.Fallback {
     override fun hideAndDeleteScoreboard(player: VanishPlayer) {
         _scoreboards[player.uuid]?.disable()
         _scoreboards.remove(player.uuid)
+    }
+
+    override fun isSpectating(playerUuid: UUID) = _spectateModePlayers.contains(playerUuid)
+
+    override fun startSpectateMode(player: VanishPlayer) {
+        _spectateModePlayers.add(player.uuid)
+
+        createAndShowScoreboard(player)
+
+        player.bukkitPlayer.sendText {
+            appendNewInfoPrefixedLine()
+            darkSpacer("-".repeat(25))
+
+            appendNewInfoPrefixedLine()
+            spacer("Spectate-Mode Steuerung:".toSmallCaps())
+
+            appendNewInfoPrefixedLine()
+            note("Zurück: ")
+            displayKey("sneak")
+            spacer(" + ")
+            displayKey("swapOffhand")
+
+            appendNewInfoPrefixedLine()
+            note("Weiter: ")
+            displayKey("swapOffhand")
+
+            appendNewInfoPrefixedLine()
+            note("Teleport: ")
+            white("2x ")
+            displayKey("sneak")
+
+            appendNewInfoPrefixedLine()
+
+            appendNewInfoPrefixedLine()
+            darkSpacer("-".repeat(25))
+        }
+    }
+
+    override fun stopSpectateMode(player: VanishPlayer) {
+        _spectateModePlayers.remove(player.uuid)
+
+        hideAndDeleteScoreboard(player)
     }
 
     companion object {

@@ -34,7 +34,10 @@ object ConnectionListener : Listener {
 
         if (vanishPlayer.isVanished()) {
             event.joinMessage(null)
-            vanishService.createAndShowScoreboard(vanishPlayer)
+
+            if (vanishService.isSpectating(event.player.uniqueId)) {
+                vanishService.createAndShowScoreboard(vanishPlayer)
+            }
 
             vanishService.current(vanishPlayer)?.bukkitPlayer?.let { currentPlayer ->
                 glowingApi.makeGlowing(currentPlayer, event.player, VanishConfiguration.GLOW_COLOR)
