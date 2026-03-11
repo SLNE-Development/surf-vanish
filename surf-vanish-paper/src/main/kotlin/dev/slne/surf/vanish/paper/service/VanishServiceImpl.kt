@@ -2,7 +2,6 @@ package dev.slne.surf.vanish.paper.service
 
 import com.google.auto.service.AutoService
 import dev.slne.surf.core.api.common.server.SurfServer
-import dev.slne.surf.surfapi.bukkit.api.extensions.server
 import dev.slne.surf.surfapi.bukkit.api.glow.glowingApi
 import dev.slne.surf.surfapi.bukkit.api.scoreboard.ObsoleteScoreboardApi
 import dev.slne.surf.surfapi.bukkit.api.scoreboard.SurfScoreboard
@@ -10,6 +9,8 @@ import dev.slne.surf.surfapi.bukkit.api.surfBukkitApi
 import dev.slne.surf.surfapi.core.api.font.toSmallCaps
 import dev.slne.surf.surfapi.core.api.messages.adventure.buildText
 import dev.slne.surf.surfapi.core.api.messages.adventure.sendText
+import dev.slne.surf.surfapi.core.api.util.mutableObject2ObjectMapOf
+import dev.slne.surf.surfapi.core.api.util.mutableObjectSetOf
 import dev.slne.surf.surfapi.core.api.util.toObjectList
 import dev.slne.surf.surfapi.core.api.util.toObjectSet
 import dev.slne.surf.tab.api.redis.TabEntryUpdateRedisEvent
@@ -31,28 +32,21 @@ import it.unimi.dsi.fastutil.objects.ObjectSet
 import net.kyori.adventure.text.format.TextDecoration
 import net.kyori.adventure.util.Services
 import org.bukkit.Bukkit
-import org.bukkit.Location
 import java.util.*
-import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.TimeUnit
 
 @OptIn(ObsoleteScoreboardApi::class)
 @AutoService(VanishService::class)
 class VanishServiceImpl : VanishService, Services.Fallback {
-    private val _vanishedPlayers: MutableSet<UUID> = ConcurrentHashMap.newKeySet()
-    private val _playerLogoutLocation: MutableMap<UUID, Location> = ConcurrentHashMap()
-    private val _playerQueues: MutableMap<UUID, AuditableQueue> = ConcurrentHashMap()
-    private val _scoreboards: MutableMap<UUID, SurfScoreboard> = ConcurrentHashMap()
-
+    private val _vanishedPlayers = mutableObjectSetOf<UUID>()
+    private val _playerQueues = mutableObject2ObjectMapOf<UUID, AuditableQueue>()
+    private val _scoreboards = mutableObject2ObjectMapOf<UUID, SurfScoreboard>()
 
     override fun vanish(player: VanishPlayer) {
         _vanishedPlayers.add(player.uuid)
         _playerQueues[player.uuid] = AuditableQueue()
 
         markVanished(player.uuid)
-
-        val logoutLocation = player.bukkitPlayer.location.clone()
-        _playerLogoutLocation[player.uuid] = logoutLocation
 
         createAndShowScoreboard(player)
 
@@ -100,12 +94,6 @@ class VanishServiceImpl : VanishService, Services.Fallback {
 
         _vanishedPlayers.remove(player.uuid)
         _playerQueues.remove(player.uuid)
-
-        val logoutLocation = _playerLogoutLocation[player.uuid] ?: server.worlds.first().spawnLocation.clone()
-        _playerLogoutLocation.remove(player.uuid)
-        if(!player.bukkitPlayer.hasPermission(VanishPermissionRegistry.VANISH_NOCK_BACK_TP)) {
-            player.bukkitPlayer.teleportAsync(logoutLocation)
-        }
 
         hideAndDeleteScoreboard(player)
 
