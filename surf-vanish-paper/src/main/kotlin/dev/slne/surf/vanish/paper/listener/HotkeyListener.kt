@@ -21,10 +21,6 @@ object HotkeyListener : PacketListenerAbstract() {
         val player = event.getPlayer<Player>() ?: return
         val vanishPlayer = player.vanishPlayer
 
-        if (!vanishPlayer.isVanished()) {
-            return
-        }
-
         if (!vanishService.isSpectating(player.uniqueId)) {
             return
         }
