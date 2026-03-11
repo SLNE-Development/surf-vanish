@@ -260,6 +260,7 @@ class VanishServiceImpl : VanishService, Services.Fallback {
             spacer("Spectate-Mode Steuerung:".toSmallCaps())
 
             appendNewInfoPrefixedLine()
+            appendNewInfoPrefixedLine()
             note("Zurück: ")
             displayKey("sneak")
             spacer(" + ")
