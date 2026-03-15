@@ -2,7 +2,6 @@ package dev.slne.surf.vanish.paper.service
 
 import com.google.auto.service.AutoService
 import dev.slne.surf.core.api.common.server.SurfServer
-import dev.slne.surf.surfapi.bukkit.api.extensions.server
 import dev.slne.surf.surfapi.bukkit.api.glow.glowingApi
 import dev.slne.surf.surfapi.bukkit.api.scoreboard.ObsoleteScoreboardApi
 import dev.slne.surf.surfapi.bukkit.api.scoreboard.SurfScoreboard
@@ -26,12 +25,12 @@ import dev.slne.surf.vanish.paper.plugin
 import dev.slne.surf.vanish.paper.redisApi
 import dev.slne.surf.vanish.paper.redisLoader
 import dev.slne.surf.vanish.paper.util.*
+import io.ktor.util.collections.*
 import io.papermc.paper.threadedregions.scheduler.ScheduledTask
 import it.unimi.dsi.fastutil.objects.ObjectSet
 import net.kyori.adventure.text.format.TextDecoration
 import net.kyori.adventure.util.Services
 import org.bukkit.Bukkit
-import org.bukkit.Location
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.TimeUnit
@@ -39,12 +38,11 @@ import java.util.concurrent.TimeUnit
 @OptIn(ObsoleteScoreboardApi::class)
 @AutoService(VanishService::class)
 class VanishServiceImpl : VanishService, Services.Fallback {
-    private val _vanishedPlayers: MutableSet<UUID> = ConcurrentHashMap.newKeySet()
-    private val _playerLogoutLocation: MutableMap<UUID, Location> = ConcurrentHashMap()
-    private val _playerQueues: MutableMap<UUID, AuditableQueue> = ConcurrentHashMap()
-    private val _scoreboards: MutableMap<UUID, SurfScoreboard> = ConcurrentHashMap()
-    private val _playerFlyStates: MutableMap<UUID, Boolean> = ConcurrentHashMap()
-
+    private val _vanishedPlayers = ConcurrentSet<UUID>()
+    private val _playerQueues = ConcurrentHashMap<UUID, AuditableQueue>()
+    private val _scoreboards = ConcurrentHashMap<UUID, SurfScoreboard>()
+    private val _spectateModePlayers = ConcurrentSet<UUID>()
+    private val _playerFlyStates = ConcurrentHashMap<UUID, Boolean>()
 
     override fun vanish(player: VanishPlayer) {
         _vanishedPlayers.add(player.uuid)
@@ -52,10 +50,9 @@ class VanishServiceImpl : VanishService, Services.Fallback {
 
         markVanished(player.uuid)
 
-        val logoutLocation = player.bukkitPlayer.location.clone()
-        _playerLogoutLocation[player.uuid] = logoutLocation
-
-        createAndShowScoreboard(player)
+        if (isSpectating(player.uuid)) {
+            createAndShowScoreboard(player)
+        }
 
         val vanishingPlayerPriority = player.bukkitPlayer.getVanishPriority()
 
@@ -101,12 +98,6 @@ class VanishServiceImpl : VanishService, Services.Fallback {
 
         _vanishedPlayers.remove(player.uuid)
         _playerQueues.remove(player.uuid)
-
-        val logoutLocation = _playerLogoutLocation[player.uuid] ?: server.worlds.first().spawnLocation.clone()
-        _playerLogoutLocation.remove(player.uuid)
-        if (!player.bukkitPlayer.hasPermission(VanishPermissionRegistry.VANISH_NOCK_BACK_TP)) {
-            player.bukkitPlayer.teleportAsync(logoutLocation)
-        }
 
         hideAndDeleteScoreboard(player)
 
@@ -261,6 +252,49 @@ class VanishServiceImpl : VanishService, Services.Fallback {
 
     override fun getFlyState(uuid: UUID): Boolean {
         return _playerFlyStates[uuid] ?: false
+    }
+
+    override fun isSpectating(playerUuid: UUID) = _spectateModePlayers.contains(playerUuid)
+
+    override fun startSpectateMode(player: VanishPlayer) {
+        _spectateModePlayers.add(player.uuid)
+
+        createAndShowScoreboard(player)
+
+        player.bukkitPlayer.sendText {
+            appendNewInfoPrefixedLine()
+            darkSpacer("-".repeat(25))
+
+            appendNewInfoPrefixedLine()
+            spacer("Spectate-Mode Steuerung:".toSmallCaps())
+
+            appendNewInfoPrefixedLine()
+            appendNewInfoPrefixedLine()
+            note("Zurück: ")
+            displayKey("sneak")
+            spacer(" + ")
+            displayKey("swapOffhand")
+
+            appendNewInfoPrefixedLine()
+            note("Weiter: ")
+            displayKey("swapOffhand")
+
+            appendNewInfoPrefixedLine()
+            note("Teleport: ")
+            white("2x ")
+            displayKey("sneak")
+
+            appendNewInfoPrefixedLine()
+
+            appendNewInfoPrefixedLine()
+            darkSpacer("-".repeat(25))
+        }
+    }
+
+    override fun stopSpectateMode(player: VanishPlayer) {
+        _spectateModePlayers.remove(player.uuid)
+
+        hideAndDeleteScoreboard(player)
     }
 
     companion object {

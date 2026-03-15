@@ -7,16 +7,15 @@ import com.github.retrooper.packetevents.protocol.player.DiggingAction
 import com.github.retrooper.packetevents.wrapper.play.client.WrapperPlayClientPlayerDigging
 import com.github.retrooper.packetevents.wrapper.play.client.WrapperPlayClientPlayerInput
 import dev.slne.surf.surfapi.core.api.messages.adventure.sendText
+import dev.slne.surf.surfapi.core.api.util.mutableObject2ObjectMapOf
 import dev.slne.surf.vanish.core.service.vanishService
 import dev.slne.surf.vanish.paper.util.bukkitPlayer
 import dev.slne.surf.vanish.paper.util.vanishPlayer
 import org.bukkit.entity.Player
 import java.util.*
-import java.util.concurrent.ConcurrentHashMap
 
 object HotkeyListener : PacketListenerAbstract() {
-    private val _lastSneaks = ConcurrentHashMap<UUID, Long>()
-    private val _teleportHelper = ConcurrentHashMap<UUID, Boolean>()
+    private val _lastSneaks = mutableObject2ObjectMapOf<UUID, Long>()
 
     override fun onPacketReceive(event: PacketReceiveEvent) {
         val player = event.getPlayer<Player>() ?: return
@@ -25,7 +24,8 @@ object HotkeyListener : PacketListenerAbstract() {
         if (!vanishPlayer.isVanished()) {
             return
         }
-        if (!isTeleportHelperEnabled(player.uniqueId)) {
+
+        if (!vanishService.isSpectating(player.uniqueId)) {
             return
         }
 
@@ -132,17 +132,5 @@ object HotkeyListener : PacketListenerAbstract() {
                 }
             }
         }
-    }
-
-    fun toggleTeleportHelper(uuid: UUID): Boolean {
-        val current = isTeleportHelperEnabled(uuid)
-        val newValue = !current
-        _teleportHelper[uuid] = newValue
-
-        return newValue
-    }
-
-    private fun isTeleportHelperEnabled(uuid: UUID): Boolean {
-        return _teleportHelper[uuid] ?: true
     }
 }

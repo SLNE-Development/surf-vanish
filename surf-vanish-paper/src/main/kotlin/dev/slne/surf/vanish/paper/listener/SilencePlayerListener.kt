@@ -9,7 +9,6 @@ import org.bukkit.event.Listener
 import org.bukkit.event.block.Action
 import org.bukkit.event.block.EntityBlockFormEvent
 import org.bukkit.event.entity.EntityDamageEvent
-import org.bukkit.event.entity.EntityTargetLivingEntityEvent
 import org.bukkit.event.entity.FoodLevelChangeEvent
 import org.bukkit.event.player.*
 import org.bukkit.event.raid.RaidTriggerEvent
@@ -133,15 +132,4 @@ object SilencePlayerListener : Listener {
             event.cancel()
         }
     }
-
-    @EventHandler
-    fun onEntityTargetLivingEntity(event: EntityTargetLivingEntityEvent) {
-        val target = event.target as? Player ?: return
-        val vanishPlayer = target.vanishPlayer
-
-        if (vanishPlayer.isVanished()) {
-            event.cancel()
-        }
-    }
-
 }

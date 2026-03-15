@@ -1,5 +1,7 @@
 package dev.slne.surf.vanish.paper.listener
 
+import com.github.shynixn.mccoroutine.folia.entityDispatcher
+import com.github.shynixn.mccoroutine.folia.launch
 import dev.slne.surf.surfapi.bukkit.api.glow.glowingApi
 import dev.slne.surf.surfapi.core.api.messages.adventure.sendText
 import dev.slne.surf.vanish.core.service.vanishPlayerService
@@ -23,10 +25,12 @@ object ConnectionListener : Listener {
         val vanishPlayer = event.player.vanishPlayer
         val joiningPlayerPriority = event.player.getVanishPriority()
 
-        if(event.player.hasPermission(VanishPermissionRegistry.VANISH_SAVE_FLY_STATE)) {
-            if(vanishService.getFlyState(event.player.uniqueId)) {
-                event.player.allowFlight = true
-                event.player.isFlying = true
+        if (event.player.hasPermission(VanishPermissionRegistry.VANISH_SAVE_FLY_STATE)) {
+            if (vanishService.getFlyState(event.player.uniqueId)) {
+                plugin.launch(plugin.entityDispatcher(event.player)) {
+                    event.player.allowFlight = true
+                    event.player.isFlying = true
+                }
             }
         }
 
@@ -41,7 +45,10 @@ object ConnectionListener : Listener {
 
         if (vanishPlayer.isVanished()) {
             event.joinMessage(null)
-            vanishService.createAndShowScoreboard(vanishPlayer)
+
+            if (vanishService.isSpectating(event.player.uniqueId)) {
+                vanishService.createAndShowScoreboard(vanishPlayer)
+            }
 
             vanishService.current(vanishPlayer)?.bukkitPlayer?.let { currentPlayer ->
                 glowingApi.makeGlowing(currentPlayer, event.player, VanishConfiguration.GLOW_COLOR)
