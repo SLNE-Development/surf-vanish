@@ -9,6 +9,7 @@ import dev.slne.surf.vanish.paper.config.VanishConfiguration
 import dev.slne.surf.vanish.paper.plugin
 import dev.slne.surf.vanish.paper.util.VanishPermissionRegistry
 import dev.slne.surf.vanish.paper.util.canVanishSee
+import kotlinx.coroutines.withContext
 import org.bukkit.Bukkit
 import org.bukkit.event.EventHandler
 import org.bukkit.event.EventPriority
@@ -21,52 +22,56 @@ object ConnectionListener : Listener {
     fun onConnect(event: PlayerJoinEvent) {
         val player = event.player
 
-        if (player.hasPermission(VanishPermissionRegistry.VANISH_SAVE_FLY_STATE)) {
-            if (vanishService.getFlyState(player.uniqueId)) {
-                plugin.launch(plugin.entityDispatcher(player)) {
+        plugin.launch(plugin.entityDispatcher(player)) {
+            if (player.hasPermission(VanishPermissionRegistry.VANISH_SAVE_FLY_STATE)) {
+                if (vanishService.getFlyState(player.uniqueId)) {
                     player.allowFlight = true
                     player.isFlying = true
                 }
             }
-        }
 
-        vanishService.allOnline().forEach { vanishedPlayer ->
-            if (!player.canVanishSee(vanishedPlayer)) {
-                player.hidePlayer(plugin, vanishedPlayer)
-            }
-        }
-
-        if (vanishService.isVanished(player)) {
-            event.joinMessage(null)
-
-            if (vanishService.isSpectating(player.uniqueId)) {
-                vanishService.createAndShowScoreboard(player)
+            vanishService.allOnline().forEach { vanishedPlayer ->
+                if (!player.canVanishSee(vanishedPlayer)) {
+                    player.hidePlayer(plugin, vanishedPlayer)
+                }
             }
 
-            vanishService.current(player)?.player?.let { currentPlayer ->
-                glowingApi.makeGlowing(currentPlayer, player, VanishConfiguration.GLOW_COLOR)
-            }
+            if (vanishService.isVanished(player)) {
+                event.joinMessage(null)
 
-            Bukkit.getOnlinePlayers()
-                .filterNot { it.uniqueId == player.uniqueId }
-                .forEach { onlinePlayer ->
-
-                    if (!onlinePlayer.canVanishSee(player)) {
-                        onlinePlayer.hidePlayer(plugin, player)
-                    } else {
-                        onlinePlayer.sendText {
-                            appendInfoPrefix()
-                            variableValue(player.name)
-                            info(" hat den Server unsichtbar betreten.")
-                        }
-                    }
+                if (vanishService.isSpectating(player.uniqueId)) {
+                    vanishService.createAndShowScoreboard(player)
                 }
 
-            player.sendText {
-                appendInfoPrefix()
-                info("Du bist für andere Spieler unsichtbar.")
+                vanishService.current(player)?.player?.let { currentPlayer ->
+                    glowingApi.makeGlowing(currentPlayer, player, VanishConfiguration.GLOW_COLOR)
+                }
+
+                Bukkit.getOnlinePlayers()
+                    .filterNot { it.uniqueId == player.uniqueId }
+                    .forEach { onlinePlayer ->
+
+                        withContext(plugin.entityDispatcher(onlinePlayer)) {
+                            if (!onlinePlayer.canVanishSee(player)) {
+                                onlinePlayer.hidePlayer(plugin, player)
+                            } else {
+                                onlinePlayer.sendText {
+                                    appendInfoPrefix()
+                                    variableValue(player.name)
+                                    info(" hat den Server unsichtbar betreten.")
+                                }
+                            }
+                        }
+                    }
+
+                player.sendText {
+                    appendInfoPrefix()
+                    info("Du bist für andere Spieler unsichtbar.")
+                }
             }
         }
+
+
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)

@@ -1,5 +1,7 @@
 package dev.slne.surf.vanish.paper.service
 
+import com.github.shynixn.mccoroutine.folia.entityDispatcher
+import com.github.shynixn.mccoroutine.folia.launch
 import com.google.auto.service.AutoService
 import dev.slne.surf.core.api.common.server.SurfServer
 import dev.slne.surf.surfapi.bukkit.api.glow.glowingApi
@@ -26,9 +28,9 @@ import dev.slne.surf.vanish.paper.util.AuditableQueue
 import dev.slne.surf.vanish.paper.util.canVanishSee
 import dev.slne.surf.vanish.paper.util.currentTarget
 import dev.slne.surf.vanish.paper.util.displayKey
-import io.ktor.util.collections.*
 import io.papermc.paper.threadedregions.scheduler.ScheduledTask
 import it.unimi.dsi.fastutil.objects.ObjectSet
+import kotlinx.coroutines.withContext
 import net.kyori.adventure.text.format.TextDecoration
 import net.kyori.adventure.util.Services
 import org.bukkit.Bukkit
@@ -41,10 +43,10 @@ import java.util.concurrent.TimeUnit
 @OptIn(ObsoleteScoreboardApi::class)
 @AutoService(VanishService::class)
 class VanishServiceImpl : VanishService, Services.Fallback {
-    private val _vanishedPlayers = ConcurrentSet<UUID>()
+    private val _vanishedPlayers = ConcurrentHashMap.newKeySet<UUID>()
     private val _playerQueues = ConcurrentHashMap<UUID, AuditableQueue>()
     private val _scoreboards = ConcurrentHashMap<UUID, SurfScoreboard>()
-    private val _spectateModePlayers = ConcurrentSet<UUID>()
+    private val _spectateModePlayers = ConcurrentHashMap.newKeySet<UUID>()
     private val _playerFlyStates = ConcurrentHashMap<UUID, Boolean>()
 
     override fun vanish(player: Player) {
@@ -57,34 +59,38 @@ class VanishServiceImpl : VanishService, Services.Fallback {
             createAndShowScoreboard(player)
         }
 
-        Bukkit.getOnlinePlayers()
-            .filterNot { it.uniqueId == player.uniqueId }
-            .forEach { onlinePlayer ->
+        plugin.launch {
+            Bukkit.getOnlinePlayers()
+                .filterNot { it.uniqueId == player.uniqueId }
+                .forEach { onlinePlayer ->
 
-                if (!onlinePlayer.canVanishSee(player)) {
-                    onlinePlayer.hidePlayer(plugin, player)
+                    if (!onlinePlayer.canVanishSee(player)) {
+                        withContext(plugin.entityDispatcher(onlinePlayer)) {
+                            onlinePlayer.hidePlayer(plugin, player)
 
-                    if (config.spoofConnectionMessages) {
-                        onlinePlayer.sendText {
-                            append(
-                                miniMessage.deserialize(
-                                    "<dark_gray>[<red>-<dark_gray>]${
-                                        LuckPermsHook.getPrefix(
-                                            player
+                            if (config.spoofConnectionMessages) {
+                                onlinePlayer.sendText {
+                                    append(
+                                        miniMessage.deserialize(
+                                            "<dark_gray>[<red>-<dark_gray>]${
+                                                LuckPermsHook.getPrefix(
+                                                    player
+                                                )
+                                            } ${player.name}"
                                         )
-                                    } ${player.name}"
-                                )
-                            )
+                                    )
+                                }
+                            }
+                        }
+                    } else {
+                        onlinePlayer.sendText {
+                            appendInfoPrefix()
+                            variableValue(player.name)
+                            info(" ist nun unsichtbar.")
                         }
                     }
-                } else {
-                    onlinePlayer.sendText {
-                        appendInfoPrefix()
-                        variableValue(player.name)
-                        info(" ist nun unsichtbar.")
-                    }
                 }
-            }
+        }
     }
 
     override fun reappear(player: Player) {
@@ -99,38 +105,42 @@ class VanishServiceImpl : VanishService, Services.Fallback {
 
         hideAndDeleteScoreboard(player)
 
-        Bukkit.getOnlinePlayers()
-            .filterNot { it.uniqueId == player.uniqueId }
-            .forEach { onlinePlayer ->
-
-                if (!onlinePlayer.canVanishSee(player)) {
-                    onlinePlayer.showPlayer(plugin, player)
-
-                    redisApi.publishEvent(
-                        TabEntryUpdateRedisEvent(player.uniqueId)
-                    )
-
-                    if (config.spoofConnectionMessages) {
-                        onlinePlayer.sendText {
-                            append(
-                                miniMessage.deserialize(
-                                    "<dark_gray>[<green>+<dark_gray>]${
-                                        LuckPermsHook.getPrefix(
-                                            player
+        plugin.launch {
+            Bukkit.getOnlinePlayers()
+                .filterNot { it.uniqueId == player.uniqueId }
+                .forEach { onlinePlayer ->
+                    if (!onlinePlayer.canVanishSee(player)) {
+                        withContext(plugin.entityDispatcher(onlinePlayer)) {
+                            onlinePlayer.showPlayer(plugin, player)
+                            if (config.spoofConnectionMessages) {
+                                onlinePlayer.sendText {
+                                    append(
+                                        miniMessage.deserialize(
+                                            "<dark_gray>[<green>+<dark_gray>]${
+                                                LuckPermsHook.getPrefix(
+                                                    player
+                                                )
+                                            } ${player.name}"
                                         )
-                                    } ${player.name}"
-                                )
-                            )
+                                    )
+                                }
+                            }
+                        }
+                    } else {
+                        onlinePlayer.sendText {
+                            appendInfoPrefix()
+                            variableValue(player.name)
+                            info(" ist nun sichtbar.")
                         }
                     }
-                } else {
-                    onlinePlayer.sendText {
-                        appendInfoPrefix()
-                        variableValue(player.name)
-                        info(" ist nun sichtbar.")
-                    }
                 }
-            }
+        }
+
+
+
+        redisApi.publishEvent(
+            TabEntryUpdateRedisEvent(player.uniqueId)
+        )
     }
 
     override fun isVanished(player: OfflinePlayer) = _vanishedPlayers.contains(player.uniqueId)
@@ -207,7 +217,7 @@ class VanishServiceImpl : VanishService, Services.Fallback {
                             player.currentTarget?.player?.location?.distanceSquared(
                                 player.location
                             )?.toInt() ?: "Unbekannt"
-                        } Blöcke".toSmallCaps()
+                        } Blöcke²".toSmallCaps()
                     )
                 }
             }
