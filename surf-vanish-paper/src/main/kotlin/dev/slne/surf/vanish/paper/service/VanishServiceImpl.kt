@@ -9,6 +9,7 @@ import dev.slne.surf.surfapi.bukkit.api.surfBukkitApi
 import dev.slne.surf.surfapi.core.api.font.toSmallCaps
 import dev.slne.surf.surfapi.core.api.messages.adventure.buildText
 import dev.slne.surf.surfapi.core.api.messages.adventure.sendText
+import dev.slne.surf.surfapi.core.api.minimessage.miniMessage
 import dev.slne.surf.surfapi.core.api.util.toObjectList
 import dev.slne.surf.surfapi.core.api.util.toObjectSet
 import dev.slne.surf.tab.api.redis.TabEntryUpdateRedisEvent
@@ -17,7 +18,7 @@ import dev.slne.surf.vanish.core.service.VanishService
 import dev.slne.surf.vanish.core.service.vanishService
 import dev.slne.surf.vanish.paper.config
 import dev.slne.surf.vanish.paper.config.VanishConfiguration
-import dev.slne.surf.vanish.paper.hook.MiniPlaceholdersHook
+import dev.slne.surf.vanish.paper.hook.LuckPermsHook
 import dev.slne.surf.vanish.paper.plugin
 import dev.slne.surf.vanish.paper.redisApi
 import dev.slne.surf.vanish.paper.redisLoader
@@ -66,9 +67,12 @@ class VanishServiceImpl : VanishService, Services.Fallback {
                     if (config.spoofConnectionMessages) {
                         onlinePlayer.sendText {
                             append(
-                                MiniPlaceholdersHook.parse(
-                                    player,
-                                    config.fakeDisconnectMessage
+                                miniMessage.deserialize(
+                                    "<gray>[<red>-<gray>] ${
+                                        LuckPermsHook.getPrefix(
+                                            player
+                                        )
+                                    } ${player.name}"
                                 )
                             )
                         }
@@ -109,9 +113,12 @@ class VanishServiceImpl : VanishService, Services.Fallback {
                     if (config.spoofConnectionMessages) {
                         onlinePlayer.sendText {
                             append(
-                                MiniPlaceholdersHook.parse(
-                                    player,
-                                    config.fakeConnectMessage
+                                miniMessage.deserialize(
+                                    "<gray>[<green>+<gray>] ${
+                                        LuckPermsHook.getPrefix(
+                                            player
+                                        )
+                                    } ${player.name}"
                                 )
                             )
                         }
