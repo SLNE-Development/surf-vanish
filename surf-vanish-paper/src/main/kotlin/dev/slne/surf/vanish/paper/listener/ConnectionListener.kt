@@ -8,7 +8,7 @@ import dev.slne.surf.vanish.core.service.vanishService
 import dev.slne.surf.vanish.paper.config.VanishConfiguration
 import dev.slne.surf.vanish.paper.plugin
 import dev.slne.surf.vanish.paper.util.VanishPermissionRegistry
-import dev.slne.surf.vanish.paper.util.getVanishPriority
+import dev.slne.surf.vanish.paper.util.canVanishSee
 import org.bukkit.Bukkit
 import org.bukkit.event.EventHandler
 import org.bukkit.event.EventPriority
@@ -19,59 +19,50 @@ import org.bukkit.event.player.PlayerQuitEvent
 object ConnectionListener : Listener {
     @EventHandler(priority = EventPriority.HIGHEST)
     fun onConnect(event: PlayerJoinEvent) {
-        val joiningPlayerPriority = event.player.getVanishPriority()
+        val player = event.player
 
-        if (event.player.hasPermission(VanishPermissionRegistry.VANISH_SAVE_FLY_STATE)) {
-            if (vanishService.getFlyState(event.player.uniqueId)) {
-                plugin.launch(plugin.entityDispatcher(event.player)) {
-                    event.player.allowFlight = true
-                    event.player.isFlying = true
+        if (player.hasPermission(VanishPermissionRegistry.VANISH_SAVE_FLY_STATE)) {
+            if (vanishService.getFlyState(player.uniqueId)) {
+                plugin.launch(plugin.entityDispatcher(player)) {
+                    player.allowFlight = true
+                    player.isFlying = true
                 }
             }
         }
 
-        if (!event.player.hasPermission(VanishPermissionRegistry.VANISH_BYPASS)) {
-            vanishService.allOnline().forEach { vanishedPlayer ->
-                val vanishedPlayerPriority = vanishedPlayer.getVanishPriority()
-                if (joiningPlayerPriority < vanishedPlayerPriority) {
-                    event.player.hidePlayer(plugin, vanishedPlayer)
-                }
+        vanishService.allOnline().forEach { vanishedPlayer ->
+            if (!player.canVanishSee(vanishedPlayer)) {
+                player.hidePlayer(plugin, vanishedPlayer)
             }
         }
 
-        if (vanishService.isVanished(event.player)) {
+        if (vanishService.isVanished(player)) {
             event.joinMessage(null)
 
-            if (vanishService.isSpectating(event.player.uniqueId)) {
-                vanishService.createAndShowScoreboard(event.player)
+            if (vanishService.isSpectating(player.uniqueId)) {
+                vanishService.createAndShowScoreboard(player)
             }
 
-            vanishService.current(event.player)?.player?.let { currentPlayer ->
-                glowingApi.makeGlowing(currentPlayer, event.player, VanishConfiguration.GLOW_COLOR)
+            vanishService.current(player)?.player?.let { currentPlayer ->
+                glowingApi.makeGlowing(currentPlayer, player, VanishConfiguration.GLOW_COLOR)
             }
 
             Bukkit.getOnlinePlayers()
-                .filterNot { it.uniqueId == event.player.uniqueId }.forEach { onlinePlayer ->
-                    if (!onlinePlayer.hasPermission(VanishPermissionRegistry.VANISH_BYPASS)) {
-                        if (onlinePlayer.getVanishPriority() < joiningPlayerPriority) {
-                            onlinePlayer.hidePlayer(plugin, event.player)
-                        } else {
-                            onlinePlayer.sendText {
-                                appendInfoPrefix()
-                                variableValue(event.player.name)
-                                info(" hat den Server unsichtbar betreten.")
-                            }
-                        }
+                .filterNot { it.uniqueId == player.uniqueId }
+                .forEach { onlinePlayer ->
+
+                    if (!onlinePlayer.canVanishSee(player)) {
+                        onlinePlayer.hidePlayer(plugin, player)
                     } else {
                         onlinePlayer.sendText {
                             appendInfoPrefix()
-                            variableValue(event.player.name)
+                            variableValue(player.name)
                             info(" hat den Server unsichtbar betreten.")
                         }
                     }
                 }
 
-            event.player.sendText {
+            player.sendText {
                 appendInfoPrefix()
                 info("Du bist für andere Spieler unsichtbar.")
             }
@@ -80,22 +71,21 @@ object ConnectionListener : Listener {
 
     @EventHandler(priority = EventPriority.HIGHEST)
     fun onDisconnect(event: PlayerQuitEvent) {
-        vanishService.hideAndDeleteScoreboard(event.player)
-        vanishService.setFlyState(event.player.uniqueId, event.player.isFlying)
+        val player = event.player
 
-        if (vanishService.isVanished(event.player)) {
+        vanishService.hideAndDeleteScoreboard(player)
+        vanishService.setFlyState(player.uniqueId, player.isFlying)
+
+        if (vanishService.isVanished(player)) {
             event.quitMessage(null)
 
-            val leavingPlayerPriority = event.player.getVanishPriority()
-
             Bukkit.getOnlinePlayers()
-                .filterNot { it.uniqueId == event.player.uniqueId }.forEach { onlinePlayer ->
-                    if (onlinePlayer.hasPermission(VanishPermissionRegistry.VANISH_BYPASS) ||
-                        onlinePlayer.getVanishPriority() > leavingPlayerPriority
-                    ) {
+                .filterNot { it.uniqueId == player.uniqueId }
+                .forEach { onlinePlayer ->
+                    if (onlinePlayer.canVanishSee(player)) {
                         onlinePlayer.sendText {
                             appendInfoPrefix()
-                            variableValue(event.player.name)
+                            variableValue(player.name)
                             info(" hat den Server unsichtbar verlassen.")
                         }
                     }

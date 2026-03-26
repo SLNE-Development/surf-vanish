@@ -23,3 +23,14 @@ fun Player.getVanishPriority(): Int {
         }
         .maxOrNull() ?: 0
 }
+
+fun Player.canVanishSee(target: Player): Boolean {
+    if (this.uniqueId == target.uniqueId) return true
+
+    if (this.hasPermission(VanishPermissionRegistry.VANISH_BYPASS)) return true
+
+    val ownPriority = this.getVanishPriority()
+    val targetPriority = target.getVanishPriority()
+
+    return ownPriority >= targetPriority
+}

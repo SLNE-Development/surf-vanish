@@ -5,11 +5,7 @@ import com.github.shynixn.mccoroutine.folia.SuspendingJavaPlugin
 import dev.slne.surf.surfapi.bukkit.api.event.register
 import dev.slne.surf.vanish.paper.command.vanishCommand
 import dev.slne.surf.vanish.paper.config.VanishConfiguration
-import dev.slne.surf.vanish.paper.listener.AdvancementListener
-import dev.slne.surf.vanish.paper.listener.ConnectionListener
-import dev.slne.surf.vanish.paper.listener.GameModeChangeListener
-import dev.slne.surf.vanish.paper.listener.HotkeyListener
-import dev.slne.surf.vanish.paper.listener.SilencePlayerListener
+import dev.slne.surf.vanish.paper.listener.*
 import dev.slne.surf.vanish.paper.service.VanishServiceImpl
 import org.bukkit.plugin.java.JavaPlugin
 
@@ -21,6 +17,7 @@ class PaperMain : SuspendingJavaPlugin() {
         SilencePlayerListener.register()
         AdvancementListener.register()
         GameModeChangeListener.register()
+        TabCompleteListener.register()
         PacketEvents.getAPI().eventManager.registerListener(HotkeyListener)
 
         vanishCommand()

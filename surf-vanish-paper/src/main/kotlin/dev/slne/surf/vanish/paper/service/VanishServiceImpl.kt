@@ -21,7 +21,10 @@ import dev.slne.surf.vanish.paper.hook.MiniPlaceholdersHook
 import dev.slne.surf.vanish.paper.plugin
 import dev.slne.surf.vanish.paper.redisApi
 import dev.slne.surf.vanish.paper.redisLoader
-import dev.slne.surf.vanish.paper.util.*
+import dev.slne.surf.vanish.paper.util.AuditableQueue
+import dev.slne.surf.vanish.paper.util.canVanishSee
+import dev.slne.surf.vanish.paper.util.currentTarget
+import dev.slne.surf.vanish.paper.util.displayKey
 import io.ktor.util.collections.*
 import io.papermc.paper.threadedregions.scheduler.ScheduledTask
 import it.unimi.dsi.fastutil.objects.ObjectSet
@@ -53,29 +56,21 @@ class VanishServiceImpl : VanishService, Services.Fallback {
             createAndShowScoreboard(player)
         }
 
-        val vanishingPlayerPriority = player.getVanishPriority()
-
         Bukkit.getOnlinePlayers()
-            .filterNot { it.uniqueId == player.uniqueId }.forEach { onlinePlayer ->
-                if (!onlinePlayer.hasPermission(VanishPermissionRegistry.VANISH_BYPASS)) {
-                    if (onlinePlayer.getVanishPriority() < vanishingPlayerPriority) {
-                        onlinePlayer.hidePlayer(plugin, player)
+            .filterNot { it.uniqueId == player.uniqueId }
+            .forEach { onlinePlayer ->
 
-                        if (config.spoofConnectionMessages) {
-                            onlinePlayer.sendText {
-                                append(
-                                    MiniPlaceholdersHook.parse(
-                                        player,
-                                        config.fakeDisconnectMessage
-                                    )
-                                )
-                            }
-                        }
-                    } else {
+                if (!onlinePlayer.canVanishSee(player)) {
+                    onlinePlayer.hidePlayer(plugin, player)
+
+                    if (config.spoofConnectionMessages) {
                         onlinePlayer.sendText {
-                            appendInfoPrefix()
-                            variableValue(player.name)
-                            info(" ist nun unsichtbar.")
+                            append(
+                                MiniPlaceholdersHook.parse(
+                                    player,
+                                    config.fakeDisconnectMessage
+                                )
+                            )
                         }
                     }
                 } else {
@@ -100,35 +95,25 @@ class VanishServiceImpl : VanishService, Services.Fallback {
 
         hideAndDeleteScoreboard(player)
 
-        val reappearingPlayerPriority = player.getVanishPriority()
-
         Bukkit.getOnlinePlayers()
-            .filterNot { it.uniqueId == player.uniqueId }.forEach { onlinePlayer ->
-                if (!onlinePlayer.hasPermission(VanishPermissionRegistry.VANISH_BYPASS)) {
-                    if (onlinePlayer.getVanishPriority() < reappearingPlayerPriority) {
-                        onlinePlayer.showPlayer(plugin, player)
+            .filterNot { it.uniqueId == player.uniqueId }
+            .forEach { onlinePlayer ->
 
-                        redisApi.publishEvent(
-                            TabEntryUpdateRedisEvent(
-                                player.uniqueId
-                            )
-                        )
+                if (!onlinePlayer.canVanishSee(player)) {
+                    onlinePlayer.showPlayer(plugin, player)
 
-                        if (config.spoofConnectionMessages) {
-                            onlinePlayer.sendText {
-                                append(
-                                    MiniPlaceholdersHook.parse(
-                                        player,
-                                        config.fakeConnectMessage
-                                    )
-                                )
-                            }
-                        }
-                    } else {
+                    redisApi.publishEvent(
+                        TabEntryUpdateRedisEvent(player.uniqueId)
+                    )
+
+                    if (config.spoofConnectionMessages) {
                         onlinePlayer.sendText {
-                            appendInfoPrefix()
-                            variableValue(player.name)
-                            info(" ist nun sichtbar.")
+                            append(
+                                MiniPlaceholdersHook.parse(
+                                    player,
+                                    config.fakeConnectMessage
+                                )
+                            )
                         }
                     }
                 } else {
@@ -159,12 +144,12 @@ class VanishServiceImpl : VanishService, Services.Fallback {
             glowingApi.removeGlowing(currentPlayer, player)
         }
 
-        val spectatorPriority = player.getVanishPriority() ?: 0
-
-        val next = _playerQueues[player.uniqueId]?.next(Bukkit.getOnlinePlayers().filterNot {
-            it.hasPermission(VanishPermissionRegistry.VANISH_BYPASS) ||
-                    it.getVanishPriority() >= spectatorPriority
-        }.map { it.uniqueId }.toObjectList())?.let {
+        val next = _playerQueues[player.uniqueId]?.next(
+            Bukkit.getOnlinePlayers()
+                .filter { player.canVanishSee(it) }
+                .map { it.uniqueId }
+                .toObjectList()
+        )?.let {
             Bukkit.getOfflinePlayer(it)
         }
 
