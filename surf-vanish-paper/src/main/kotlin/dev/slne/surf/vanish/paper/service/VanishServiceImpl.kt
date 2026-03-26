@@ -68,7 +68,7 @@ class VanishServiceImpl : VanishService, Services.Fallback {
                         onlinePlayer.sendText {
                             append(
                                 miniMessage.deserialize(
-                                    "<gray>[<red>-<gray>] ${
+                                    "<dark_gray>[<red>-<dark_gray>]${
                                         LuckPermsHook.getPrefix(
                                             player
                                         )
@@ -114,7 +114,7 @@ class VanishServiceImpl : VanishService, Services.Fallback {
                         onlinePlayer.sendText {
                             append(
                                 miniMessage.deserialize(
-                                    "<gray>[<green>+<gray>] ${
+                                    "<dark_gray>[<green>+<dark_gray>]${
                                         LuckPermsHook.getPrefix(
                                             player
                                         )
