@@ -9,8 +9,6 @@ import com.github.retrooper.packetevents.wrapper.play.client.WrapperPlayClientPl
 import dev.slne.surf.surfapi.core.api.messages.adventure.sendText
 import dev.slne.surf.surfapi.core.api.util.mutableObject2ObjectMapOf
 import dev.slne.surf.vanish.core.service.vanishService
-import dev.slne.surf.vanish.paper.util.bukkitPlayer
-import dev.slne.surf.vanish.paper.util.vanishPlayer
 import org.bukkit.entity.Player
 import java.util.*
 
@@ -19,9 +17,8 @@ object HotkeyListener : PacketListenerAbstract() {
 
     override fun onPacketReceive(event: PacketReceiveEvent) {
         val player = event.getPlayer<Player>() ?: return
-        val vanishPlayer = player.vanishPlayer
 
-        if (!vanishPlayer.isVanished()) {
+        if (!vanishService.isVanished(player)) {
             return
         }
 
@@ -38,7 +35,7 @@ object HotkeyListener : PacketListenerAbstract() {
                     val now = System.currentTimeMillis()
 
                     if (lastSneak != null && now - lastSneak < 500) {
-                        val current = vanishService.current(vanishPlayer) ?: run {
+                        val current = vanishService.current(player) ?: run {
                             player.sendText {
                                 appendErrorPrefix()
                                 error("Du schaust gerade niemandem zu.")
@@ -46,7 +43,7 @@ object HotkeyListener : PacketListenerAbstract() {
                             return
                         }
 
-                        val vanishTarget = current.bukkitPlayer ?: run {
+                        val vanishTarget = current.player ?: run {
                             player.sendText {
                                 appendErrorPrefix()
                                 error("Der Spieler, dem du zuschaust, ist nicht mehr online.")
@@ -76,7 +73,7 @@ object HotkeyListener : PacketListenerAbstract() {
                     val sneakCacheResult = _lastSneaks[player.uniqueId]
 
                     if (sneakCacheResult != null && System.currentTimeMillis() - sneakCacheResult < 1000) {
-                        val previous = vanishService.previous(vanishPlayer) ?: run {
+                        val previous = vanishService.previous(player) ?: run {
                             player.sendText {
                                 appendErrorPrefix()
                                 error("Es wurde kein Spieler gefunden, den du zuvor angeschaut hast.")
@@ -84,7 +81,7 @@ object HotkeyListener : PacketListenerAbstract() {
                             return
                         }
 
-                        val vanishTarget = previous.bukkitPlayer ?: run {
+                        val vanishTarget = previous.player ?: run {
                             player.sendText {
                                 appendErrorPrefix()
                                 error("Der Spieler, dem du zuschauen möchtest, ist nicht mehr online.")
@@ -104,7 +101,7 @@ object HotkeyListener : PacketListenerAbstract() {
                         return
                     }
 
-                    val next = vanishService.next(vanishPlayer) ?: run {
+                    val next = vanishService.next(player) ?: run {
                         player.sendText {
                             appendErrorPrefix()
                             error("Es wurde kein weiterer Spieler gefunden, dem du zuschauen könntest.")
@@ -112,7 +109,7 @@ object HotkeyListener : PacketListenerAbstract() {
                         return
                     }
 
-                    val vanishTarget = next.bukkitPlayer ?: run {
+                    val vanishTarget = next.player ?: run {
                         player.sendText {
                             appendErrorPrefix()
                             error("Der Spieler, dem du zuschauen möchtest, ist nicht mehr online.")

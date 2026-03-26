@@ -1,23 +1,15 @@
 package dev.slne.surf.vanish.paper.util
 
-import dev.slne.surf.vanish.api.player.VanishOfflinePlayer
-import dev.slne.surf.vanish.api.player.VanishPlayer
-import dev.slne.surf.vanish.core.service.vanishPlayerService
+import dev.slne.surf.vanish.core.service.vanishService
 import org.bukkit.Bukkit
 import org.bukkit.entity.Player
 import java.util.*
 
-val VanishPlayer.bukkitPlayer
-    get() = Bukkit.getPlayer(this.uuid)
-        ?: error("VanishPlayer with uuid ${this.uuid} is not online")
-val Player.vanishPlayer
-    get() = vanishPlayerService.getPlayer(uniqueId)
-        ?: error("VanishPlayer for ${this.name} (${this.uniqueId}) not found")
-val VanishOfflinePlayer.bukkitPlayer get() = Bukkit.getPlayer(this.uuid)
+
+val Player.currentTarget get() = vanishService.current(this)
 
 val UUID.onlineName get() = Bukkit.getPlayer(this)?.name
 val UUID.bukkitPlayer get() = Bukkit.getPlayer(this)
-val UUID.vanishPlayer get() = vanishPlayerService.getPlayer(this)
 
 fun Player.getVanishPriority(): Int {
     return effectivePermissions
@@ -25,9 +17,9 @@ fun Player.getVanishPriority(): Int {
         .filter { it.value }
         .map { it.permission }
         .filter { it.startsWith(VanishPermissionRegistry.VANISH_PRIORITY) }
-        .mapNotNull { 
+        .mapNotNull {
             it.removePrefix("${VanishPermissionRegistry.VANISH_PRIORITY}.")
-                .toIntOrNull() 
+                .toIntOrNull()
         }
         .maxOrNull() ?: 0
 }

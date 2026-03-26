@@ -12,11 +12,8 @@ import dev.slne.surf.surfapi.core.api.messages.adventure.sendText
 import dev.slne.surf.surfapi.core.api.util.toObjectList
 import dev.slne.surf.surfapi.core.api.util.toObjectSet
 import dev.slne.surf.tab.api.redis.TabEntryUpdateRedisEvent
-import dev.slne.surf.vanish.api.player.VanishOfflinePlayer
-import dev.slne.surf.vanish.api.player.VanishPlayer
 import dev.slne.surf.vanish.api.redis.VanishStateUpdateRedisEvent
 import dev.slne.surf.vanish.core.service.VanishService
-import dev.slne.surf.vanish.core.service.vanishPlayerService
 import dev.slne.surf.vanish.core.service.vanishService
 import dev.slne.surf.vanish.paper.config
 import dev.slne.surf.vanish.paper.config.VanishConfiguration
@@ -31,6 +28,8 @@ import it.unimi.dsi.fastutil.objects.ObjectSet
 import net.kyori.adventure.text.format.TextDecoration
 import net.kyori.adventure.util.Services
 import org.bukkit.Bukkit
+import org.bukkit.OfflinePlayer
+import org.bukkit.entity.Player
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.TimeUnit
@@ -44,29 +43,29 @@ class VanishServiceImpl : VanishService, Services.Fallback {
     private val _spectateModePlayers = ConcurrentSet<UUID>()
     private val _playerFlyStates = ConcurrentHashMap<UUID, Boolean>()
 
-    override fun vanish(player: VanishPlayer) {
-        _vanishedPlayers.add(player.uuid)
-        _playerQueues[player.uuid] = AuditableQueue()
+    override fun vanish(player: Player) {
+        _vanishedPlayers.add(player.uniqueId)
+        _playerQueues[player.uniqueId] = AuditableQueue()
 
-        markVanished(player.uuid)
+        markVanished(player.uniqueId)
 
-        if (isSpectating(player.uuid)) {
+        if (isSpectating(player.uniqueId)) {
             createAndShowScoreboard(player)
         }
 
-        val vanishingPlayerPriority = player.bukkitPlayer.getVanishPriority()
+        val vanishingPlayerPriority = player.getVanishPriority()
 
         Bukkit.getOnlinePlayers()
-            .filterNot { it.uniqueId == player.uuid }.forEach { onlinePlayer ->
+            .filterNot { it.uniqueId == player.uniqueId }.forEach { onlinePlayer ->
                 if (!onlinePlayer.hasPermission(VanishPermissionRegistry.VANISH_BYPASS)) {
                     if (onlinePlayer.getVanishPriority() < vanishingPlayerPriority) {
-                        onlinePlayer.hidePlayer(plugin, player.bukkitPlayer)
+                        onlinePlayer.hidePlayer(plugin, player)
 
                         if (config.spoofConnectionMessages) {
                             onlinePlayer.sendText {
                                 append(
                                     MiniPlaceholdersHook.parse(
-                                        player.bukkitPlayer,
+                                        player,
                                         config.fakeDisconnectMessage
                                     )
                                 )
@@ -89,29 +88,29 @@ class VanishServiceImpl : VanishService, Services.Fallback {
             }
     }
 
-    override fun reappear(player: VanishPlayer) {
-        current(player)?.bukkitPlayer?.let { currentPlayer ->
-            glowingApi.removeGlowing(currentPlayer, player.bukkitPlayer)
+    override fun reappear(player: Player) {
+        current(player)?.player?.let { currentPlayer ->
+            glowingApi.removeGlowing(currentPlayer, player)
         }
 
-        markReappeared(player.uuid)
+        markReappeared(player.uniqueId)
 
-        _vanishedPlayers.remove(player.uuid)
-        _playerQueues.remove(player.uuid)
+        _vanishedPlayers.remove(player.uniqueId)
+        _playerQueues.remove(player.uniqueId)
 
         hideAndDeleteScoreboard(player)
 
-        val reappearingPlayerPriority = player.bukkitPlayer.getVanishPriority()
+        val reappearingPlayerPriority = player.getVanishPriority()
 
         Bukkit.getOnlinePlayers()
-            .filterNot { it.uniqueId == player.uuid }.forEach { onlinePlayer ->
+            .filterNot { it.uniqueId == player.uniqueId }.forEach { onlinePlayer ->
                 if (!onlinePlayer.hasPermission(VanishPermissionRegistry.VANISH_BYPASS)) {
                     if (onlinePlayer.getVanishPriority() < reappearingPlayerPriority) {
-                        onlinePlayer.showPlayer(plugin, player.bukkitPlayer)
+                        onlinePlayer.showPlayer(plugin, player)
 
                         redisApi.publishEvent(
                             TabEntryUpdateRedisEvent(
-                                player.uuid
+                                player.uniqueId
                             )
                         )
 
@@ -119,7 +118,7 @@ class VanishServiceImpl : VanishService, Services.Fallback {
                             onlinePlayer.sendText {
                                 append(
                                     MiniPlaceholdersHook.parse(
-                                        player.bukkitPlayer,
+                                        player,
                                         config.fakeConnectMessage
                                     )
                                 )
@@ -142,51 +141,47 @@ class VanishServiceImpl : VanishService, Services.Fallback {
             }
     }
 
-    override fun isVanished(player: VanishOfflinePlayer) = _vanishedPlayers.contains(player.uuid)
-    override fun all(): ObjectSet<VanishOfflinePlayer> =
-        _vanishedPlayers.map { vanishPlayerService.getOfflinePlayer(it) }.toObjectSet()
+    override fun isVanished(player: OfflinePlayer) = _vanishedPlayers.contains(player.uniqueId)
+    override fun all(): ObjectSet<OfflinePlayer> =
+        _vanishedPlayers.map { Bukkit.getOfflinePlayer(it) }.toObjectSet()
 
-    override fun allOnline(): ObjectSet<VanishPlayer> =
-        all().mapNotNull { it.bukkitPlayer?.vanishPlayer }.toObjectSet()
+    override fun allOnline(): ObjectSet<Player> =
+        all().mapNotNull { it.player }.toObjectSet()
 
-    override fun previous(player: VanishOfflinePlayer): VanishOfflinePlayer? {
-        return _playerQueues[player.uuid]?.back()?.let {
-            vanishPlayerService.getOfflinePlayer(it)
+    override fun previous(player: Player): OfflinePlayer? {
+        return _playerQueues[player.uniqueId]?.back()?.let {
+            Bukkit.getOfflinePlayer(it)
         }
     }
 
-    override fun next(player: VanishOfflinePlayer): VanishOfflinePlayer? {
-        current(player)?.bukkitPlayer?.let { currentPlayer ->
-            player.bukkitPlayer?.let { self ->
-                glowingApi.removeGlowing(currentPlayer, self)
-            }
+    override fun next(player: Player): OfflinePlayer? {
+        current(player)?.player?.let { currentPlayer ->
+            glowingApi.removeGlowing(currentPlayer, player)
         }
 
-        val spectatorPriority = player.bukkitPlayer?.getVanishPriority() ?: 0
+        val spectatorPriority = player.getVanishPriority() ?: 0
 
-        val next = _playerQueues[player.uuid]?.next(Bukkit.getOnlinePlayers().filterNot {
+        val next = _playerQueues[player.uniqueId]?.next(Bukkit.getOnlinePlayers().filterNot {
             it.hasPermission(VanishPermissionRegistry.VANISH_BYPASS) ||
                     it.getVanishPriority() >= spectatorPriority
         }.map { it.uniqueId }.toObjectList())?.let {
-            vanishPlayerService.getOfflinePlayer(it)
+            Bukkit.getOfflinePlayer(it)
         }
 
-        next?.bukkitPlayer?.let { nextPlayer ->
-            player.bukkitPlayer?.let { self ->
-                glowingApi.makeGlowing(nextPlayer, self, VanishConfiguration.GLOW_COLOR)
-            }
+        next?.player?.let { nextPlayer ->
+            glowingApi.makeGlowing(nextPlayer, player, VanishConfiguration.GLOW_COLOR)
         }
 
         return next
     }
 
-    override fun current(player: VanishOfflinePlayer) =
-        _playerQueues[player.uuid]?.current?.let {
-            vanishPlayerService.getOfflinePlayer(it)
+    override fun current(player: Player) =
+        _playerQueues[player.uniqueId]?.current?.let {
+            Bukkit.getOfflinePlayer(it)
         }
 
-    override fun createAndShowScoreboard(player: VanishPlayer) {
-        _scoreboards[player.uuid] = surfBukkitApi.createScoreboard(buildText {
+    override fun createAndShowScoreboard(player: Player) {
+        _scoreboards[player.uniqueId] = surfBukkitApi.createScoreboard(buildText {
             primary("    SpectateMode    ", TextDecoration.BOLD)
         })
             .addLine(buildText {
@@ -195,7 +190,7 @@ class VanishServiceImpl : VanishService, Services.Fallback {
             .addUpdatableLine {
                 buildText {
                     spacer(
-                        player.currentTarget?.bukkitPlayer?.name?.toSmallCaps()
+                        player.currentTarget?.player?.name?.toSmallCaps()
                             ?: "Kein Spieler".toSmallCaps()
                     )
                 }
@@ -206,7 +201,7 @@ class VanishServiceImpl : VanishService, Services.Fallback {
             })
             .addUpdatableLine {
                 buildText {
-                    spacer("${player.currentTarget?.bukkitPlayer?.health?.toInt() ?: "Unbekannt"}".toSmallCaps() + "/" + "${player.currentTarget?.bukkitPlayer?.healthScale?.toInt() ?: "Unbekannt"}".toSmallCaps())
+                    spacer("${player.currentTarget?.player?.health?.toInt() ?: "Unbekannt"}".toSmallCaps() + "/" + "${player.currentTarget?.player?.healthScale?.toInt() ?: "Unbekannt"}".toSmallCaps())
                 }
             }
             .addEmptyLine()
@@ -217,8 +212,8 @@ class VanishServiceImpl : VanishService, Services.Fallback {
                 buildText {
                     spacer(
                         "${
-                            player.currentTarget?.bukkitPlayer?.location?.distance(
-                                player.bukkitPlayer.location
+                            player.currentTarget?.player?.location?.distanceSquared(
+                                player.location
                             )?.toInt() ?: "Unbekannt"
                         } Blöcke".toSmallCaps()
                     )
@@ -231,19 +226,19 @@ class VanishServiceImpl : VanishService, Services.Fallback {
             .addUpdatableLine {
                 buildText {
                     spacer(
-                        "${player.currentTarget?.bukkitPlayer?.ping ?: "Unbekannt "}ms".toSmallCaps()
+                        "${player.currentTarget?.player?.ping ?: "Unbekannt "}ms".toSmallCaps()
                     )
                 }
             }
             .buildAutoUpdatable()
 
-        _scoreboards[player.uuid]?.enable()
-        _scoreboards[player.uuid]?.addViewer(player.bukkitPlayer)
+        _scoreboards[player.uniqueId]?.enable()
+        _scoreboards[player.uniqueId]?.addViewer(player)
     }
 
-    override fun hideAndDeleteScoreboard(player: VanishPlayer) {
-        _scoreboards[player.uuid]?.disable()
-        _scoreboards.remove(player.uuid)
+    override fun hideAndDeleteScoreboard(player: Player) {
+        _scoreboards[player.uniqueId]?.disable()
+        _scoreboards.remove(player.uniqueId)
     }
 
     override fun setFlyState(uuid: UUID, canFly: Boolean) {
@@ -256,12 +251,12 @@ class VanishServiceImpl : VanishService, Services.Fallback {
 
     override fun isSpectating(playerUuid: UUID) = _spectateModePlayers.contains(playerUuid)
 
-    override fun startSpectateMode(player: VanishPlayer) {
-        _spectateModePlayers.add(player.uuid)
+    override fun startSpectateMode(player: Player) {
+        _spectateModePlayers.add(player.uniqueId)
 
         createAndShowScoreboard(player)
 
-        player.bukkitPlayer.sendText {
+        player.sendText {
             appendNewInfoPrefixedLine()
             darkSpacer("-".repeat(25))
 
@@ -291,8 +286,8 @@ class VanishServiceImpl : VanishService, Services.Fallback {
         }
     }
 
-    override fun stopSpectateMode(player: VanishPlayer) {
-        _spectateModePlayers.remove(player.uuid)
+    override fun stopSpectateMode(player: Player) {
+        _spectateModePlayers.remove(player.uniqueId)
 
         hideAndDeleteScoreboard(player)
     }
@@ -307,7 +302,7 @@ class VanishServiceImpl : VanishService, Services.Fallback {
 
             actionbarTask = Bukkit.getAsyncScheduler().runAtFixedRate(plugin, {
                 vanishService.allOnline().forEach {
-                    it.bukkitPlayer.sendActionBar(buildText {
+                    it.sendActionBar(buildText {
                         note("Du bist für andere Spieler unsichtbar.")
                     })
                 }

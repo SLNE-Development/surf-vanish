@@ -4,14 +4,11 @@ import com.github.shynixn.mccoroutine.folia.entityDispatcher
 import com.github.shynixn.mccoroutine.folia.launch
 import dev.slne.surf.surfapi.bukkit.api.glow.glowingApi
 import dev.slne.surf.surfapi.core.api.messages.adventure.sendText
-import dev.slne.surf.vanish.core.service.vanishPlayerService
 import dev.slne.surf.vanish.core.service.vanishService
 import dev.slne.surf.vanish.paper.config.VanishConfiguration
 import dev.slne.surf.vanish.paper.plugin
 import dev.slne.surf.vanish.paper.util.VanishPermissionRegistry
-import dev.slne.surf.vanish.paper.util.bukkitPlayer
 import dev.slne.surf.vanish.paper.util.getVanishPriority
-import dev.slne.surf.vanish.paper.util.vanishPlayer
 import org.bukkit.Bukkit
 import org.bukkit.event.EventHandler
 import org.bukkit.event.EventPriority
@@ -22,7 +19,6 @@ import org.bukkit.event.player.PlayerQuitEvent
 object ConnectionListener : Listener {
     @EventHandler(priority = EventPriority.HIGHEST)
     fun onConnect(event: PlayerJoinEvent) {
-        val vanishPlayer = event.player.vanishPlayer
         val joiningPlayerPriority = event.player.getVanishPriority()
 
         if (event.player.hasPermission(VanishPermissionRegistry.VANISH_SAVE_FLY_STATE)) {
@@ -36,21 +32,21 @@ object ConnectionListener : Listener {
 
         if (!event.player.hasPermission(VanishPermissionRegistry.VANISH_BYPASS)) {
             vanishService.allOnline().forEach { vanishedPlayer ->
-                val vanishedPlayerPriority = vanishedPlayer.bukkitPlayer.getVanishPriority()
+                val vanishedPlayerPriority = vanishedPlayer.getVanishPriority()
                 if (joiningPlayerPriority < vanishedPlayerPriority) {
-                    event.player.hidePlayer(plugin, vanishedPlayer.bukkitPlayer)
+                    event.player.hidePlayer(plugin, vanishedPlayer)
                 }
             }
         }
 
-        if (vanishPlayer.isVanished()) {
+        if (vanishService.isVanished(event.player)) {
             event.joinMessage(null)
 
             if (vanishService.isSpectating(event.player.uniqueId)) {
-                vanishService.createAndShowScoreboard(vanishPlayer)
+                vanishService.createAndShowScoreboard(event.player)
             }
 
-            vanishService.current(vanishPlayer)?.bukkitPlayer?.let { currentPlayer ->
+            vanishService.current(event.player)?.player?.let { currentPlayer ->
                 glowingApi.makeGlowing(currentPlayer, event.player, VanishConfiguration.GLOW_COLOR)
             }
 
@@ -84,12 +80,10 @@ object ConnectionListener : Listener {
 
     @EventHandler(priority = EventPriority.HIGHEST)
     fun onDisconnect(event: PlayerQuitEvent) {
-        val vanishPlayer = vanishPlayerService.getPlayer(event.player.uniqueId, event.player.name)
-
-        vanishService.hideAndDeleteScoreboard(vanishPlayer)
+        vanishService.hideAndDeleteScoreboard(event.player)
         vanishService.setFlyState(event.player.uniqueId, event.player.isFlying)
 
-        if (vanishPlayer.isVanished()) {
+        if (vanishService.isVanished(event.player)) {
             event.quitMessage(null)
 
             val leavingPlayerPriority = event.player.getVanishPriority()

@@ -9,24 +9,20 @@ import dev.slne.surf.surfapi.core.api.messages.adventure.sendText
 import dev.slne.surf.vanish.core.service.vanishService
 import dev.slne.surf.vanish.paper.plugin
 import dev.slne.surf.vanish.paper.util.VanishPermissionRegistry
-import dev.slne.surf.vanish.paper.util.vanishPlayer
 import kotlin.system.measureTimeMillis
 
 fun vanishCommand() = commandTree("vanish") {
     withPermission(VanishPermissionRegistry.VANISH_COMMAND)
 
     playerExecutor { player, _ ->
-        val vanishPlayer = player.vanishPlayer
-
-        if (vanishPlayer.isVanished()) {
-            vanishPlayer.reappear()
+        if (vanishService.isVanished(player)) {
+            vanishService.reappear(player)
             player.sendText {
                 appendSuccessPrefix()
                 success("Du bist nun sichtbar.")
             }
         } else {
-            vanishPlayer.vanish()
-
+            vanishService.vanish(player)
             player.sendText {
                 appendNewInfoPrefixedLine()
                 darkSpacer("-".repeat(25))
@@ -51,16 +47,14 @@ fun vanishCommand() = commandTree("vanish") {
 
     literalArgument("spectate") {
         playerExecutor { player, _ ->
-            val vanishPlayer = player.vanishPlayer
-
             if (vanishService.isSpectating(player.uniqueId)) {
-                vanishService.stopSpectateMode(vanishPlayer)
+                vanishService.stopSpectateMode(player)
                 player.sendText {
                     appendSuccessPrefix()
                     success("Du bist nun nicht mehr im SpectateMode.")
                 }
             } else {
-                vanishService.startSpectateMode(vanishPlayer)
+                vanishService.startSpectateMode(player)
                 player.sendText {
                     appendSuccessPrefix()
                     success("Du bist nun im SpectateMode.")

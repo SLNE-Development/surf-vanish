@@ -1,31 +1,31 @@
 package dev.slne.surf.vanish.core.service
 
 import dev.slne.surf.surfapi.core.api.util.requiredService
-import dev.slne.surf.vanish.api.player.VanishOfflinePlayer
-import dev.slne.surf.vanish.api.player.VanishPlayer
 import it.unimi.dsi.fastutil.objects.ObjectSet
+import org.bukkit.OfflinePlayer
+import org.bukkit.entity.Player
 import java.util.*
 
 interface VanishService {
-    fun vanish(player: VanishPlayer)
-    fun reappear(player: VanishPlayer)
-    fun isVanished(player: VanishOfflinePlayer): Boolean
-    fun all(): ObjectSet<VanishOfflinePlayer>
-    fun allOnline(): ObjectSet<VanishPlayer>
+    fun vanish(player: Player)
+    fun reappear(player: Player)
+    fun isVanished(player: OfflinePlayer): Boolean
+    fun all(): ObjectSet<OfflinePlayer>
+    fun allOnline(): ObjectSet<Player>
 
-    fun previous(player: VanishOfflinePlayer): VanishOfflinePlayer?
-    fun next(player: VanishOfflinePlayer): VanishOfflinePlayer?
-    fun current(player: VanishOfflinePlayer): VanishOfflinePlayer?
+    fun previous(player: Player): OfflinePlayer?
+    fun next(player: Player): OfflinePlayer?
+    fun current(player: Player): OfflinePlayer?
 
     fun setFlyState(uuid: UUID, canFly: Boolean)
     fun getFlyState(uuid: UUID): Boolean
 
-    fun createAndShowScoreboard(player: VanishPlayer)
-    fun hideAndDeleteScoreboard(player: VanishPlayer)
+    fun createAndShowScoreboard(player: Player)
+    fun hideAndDeleteScoreboard(player: Player)
 
     fun isSpectating(playerUuid: UUID): Boolean
-    fun startSpectateMode(player: VanishPlayer)
-    fun stopSpectateMode(player: VanishPlayer)
+    fun startSpectateMode(player: Player)
+    fun stopSpectateMode(player: Player)
 
     companion object {
         val INSTANCE = requiredService<VanishService>()
