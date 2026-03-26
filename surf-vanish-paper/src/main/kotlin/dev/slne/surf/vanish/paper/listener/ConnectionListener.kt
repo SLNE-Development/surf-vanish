@@ -9,7 +9,7 @@ import dev.slne.surf.vanish.paper.config.VanishConfiguration
 import dev.slne.surf.vanish.paper.plugin
 import dev.slne.surf.vanish.paper.util.VanishPermissionRegistry
 import dev.slne.surf.vanish.paper.util.canVanishSee
-import kotlinx.coroutines.withContext
+import kotlinx.coroutines.launch
 import org.bukkit.Bukkit
 import org.bukkit.event.EventHandler
 import org.bukkit.event.EventPriority
@@ -51,7 +51,7 @@ object ConnectionListener : Listener {
                     .filterNot { it.uniqueId == player.uniqueId }
                     .forEach { onlinePlayer ->
 
-                        withContext(plugin.entityDispatcher(onlinePlayer)) {
+                        launch(plugin.entityDispatcher(onlinePlayer)) {
                             if (!onlinePlayer.canVanishSee(player)) {
                                 onlinePlayer.hidePlayer(plugin, player)
                             } else {

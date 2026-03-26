@@ -30,7 +30,7 @@ import dev.slne.surf.vanish.paper.util.currentTarget
 import dev.slne.surf.vanish.paper.util.displayKey
 import io.papermc.paper.threadedregions.scheduler.ScheduledTask
 import it.unimi.dsi.fastutil.objects.ObjectSet
-import kotlinx.coroutines.withContext
+import kotlinx.coroutines.launch
 import net.kyori.adventure.text.format.TextDecoration
 import net.kyori.adventure.util.Services
 import org.bukkit.Bukkit
@@ -65,7 +65,7 @@ class VanishServiceImpl : VanishService, Services.Fallback {
                 .forEach { onlinePlayer ->
 
                     if (!onlinePlayer.canVanishSee(player)) {
-                        withContext(plugin.entityDispatcher(onlinePlayer)) {
+                        launch(plugin.entityDispatcher(onlinePlayer)) {
                             onlinePlayer.hidePlayer(plugin, player)
 
                             if (config.spoofConnectionMessages) {
@@ -110,7 +110,7 @@ class VanishServiceImpl : VanishService, Services.Fallback {
                 .filterNot { it.uniqueId == player.uniqueId }
                 .forEach { onlinePlayer ->
                     if (!onlinePlayer.canVanishSee(player)) {
-                        withContext(plugin.entityDispatcher(onlinePlayer)) {
+                        launch(plugin.entityDispatcher(onlinePlayer)) {
                             onlinePlayer.showPlayer(plugin, player)
                             if (config.spoofConnectionMessages) {
                                 onlinePlayer.sendText {
