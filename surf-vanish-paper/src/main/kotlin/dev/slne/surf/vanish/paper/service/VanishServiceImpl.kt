@@ -138,7 +138,7 @@ class VanishServiceImpl : VanishService, Services.Fallback {
         _vanishedPlayers.map { Bukkit.getOfflinePlayer(it) }.toObjectSet()
 
     override fun allOnline(): ObjectSet<Player> =
-        all().mapNotNull { it.player }.toObjectSet()
+        _vanishedPlayers.mapNotNull { Bukkit.getPlayer(it) }.toObjectSet()
 
     override fun previous(player: Player): OfflinePlayer? {
         return _playerQueues[player.uniqueId]?.back()?.let {
