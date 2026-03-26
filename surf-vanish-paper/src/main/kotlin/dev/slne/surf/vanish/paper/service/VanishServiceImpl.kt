@@ -153,7 +153,7 @@ class VanishServiceImpl : VanishService, Services.Fallback {
 
         val next = _playerQueues[player.uniqueId]?.next(
             Bukkit.getOnlinePlayers()
-                .filter { player.canVanishSee(it) }
+                .filter { it.uniqueId != player.uniqueId && player.canVanishSee(it) }
                 .map { it.uniqueId }
                 .toObjectList()
         )?.let {
