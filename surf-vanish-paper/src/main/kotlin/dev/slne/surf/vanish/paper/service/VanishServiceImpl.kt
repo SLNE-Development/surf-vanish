@@ -72,11 +72,11 @@ class VanishServiceImpl : VanishService, Services.Fallback {
                                 onlinePlayer.sendText {
                                     append(
                                         miniMessage.deserialize(
-                                            "<dark_gray>[<red>-<dark_gray>]${
+                                            "<dark_gray> [<red>-<dark_gray>]${
                                                 LuckPermsHook.getPrefix(
                                                     player
                                                 )
-                                            } ${player.name}"
+                                            }${player.name}"
                                         )
                                     )
                                 }
@@ -116,11 +116,11 @@ class VanishServiceImpl : VanishService, Services.Fallback {
                                 onlinePlayer.sendText {
                                     append(
                                         miniMessage.deserialize(
-                                            "<dark_gray>[<green>+<dark_gray>]${
+                                            "<dark_gray>[<green>+<dark_gray>] ${
                                                 LuckPermsHook.getPrefix(
                                                     player
                                                 )
-                                            } ${player.name}"
+                                            }${player.name}"
                                         )
                                     )
                                 }
