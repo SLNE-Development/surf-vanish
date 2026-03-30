@@ -214,10 +214,10 @@ class VanishServiceImpl : VanishService, Services.Fallback {
                 buildText {
                     spacer(
                         "${
-                            player.currentTarget?.player?.location?.distanceSquared(
+                            player.currentTarget?.player?.location?.distance(
                                 player.location
                             )?.toInt() ?: "Unbekannt"
-                        } Blöcke²".toSmallCaps()
+                        } Blöcke".toSmallCaps()
                     )
                 }
             }
