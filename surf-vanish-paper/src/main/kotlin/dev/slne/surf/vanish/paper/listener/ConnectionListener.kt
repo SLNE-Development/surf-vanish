@@ -22,6 +22,10 @@ object ConnectionListener : Listener {
     fun onConnect(event: PlayerJoinEvent) {
         val player = event.player
 
+        if (vanishService.isVanished(player)) {
+            event.joinMessage(null)
+        }
+
         plugin.launch(plugin.entityDispatcher(player)) {
             if (player.hasPermission(VanishPermissionRegistry.VANISH_SAVE_FLY_STATE)) {
                 if (vanishService.getFlyState(player.uniqueId)) {
@@ -37,8 +41,6 @@ object ConnectionListener : Listener {
             }
 
             if (vanishService.isVanished(player)) {
-                event.joinMessage(null)
-
                 if (vanishService.isSpectating(player.uniqueId)) {
                     vanishService.createAndShowScoreboard(player)
                 }
@@ -70,8 +72,6 @@ object ConnectionListener : Listener {
                 }
             }
         }
-
-
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)
