@@ -143,7 +143,7 @@ class VanishServiceImpl : VanishService, Services.Fallback {
         )
     }
 
-    override fun isVanished(player: OfflinePlayer) = _vanishedPlayers.contains(player.uniqueId)
+    override fun isVanished(playerUuid: UUID) = _vanishedPlayers.contains(playerUuid)
     override fun all(): ObjectSet<OfflinePlayer> =
         _vanishedPlayers.map { Bukkit.getOfflinePlayer(it) }.toObjectSet()
 
