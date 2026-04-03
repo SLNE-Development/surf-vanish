@@ -9,7 +9,8 @@ import java.util.*
 interface VanishService {
     fun vanish(player: Player)
     fun reappear(player: Player)
-    fun isVanished(player: OfflinePlayer): Boolean
+    fun isVanished(player: OfflinePlayer): Boolean = isVanished(player.uniqueId)
+    fun isVanished(playerUuid: UUID): Boolean
     fun all(): ObjectSet<OfflinePlayer>
     fun allOnline(): ObjectSet<Player>
 
