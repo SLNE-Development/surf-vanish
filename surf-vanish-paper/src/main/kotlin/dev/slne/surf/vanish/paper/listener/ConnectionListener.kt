@@ -2,8 +2,8 @@ package dev.slne.surf.vanish.paper.listener
 
 import com.github.shynixn.mccoroutine.folia.entityDispatcher
 import com.github.shynixn.mccoroutine.folia.launch
-import dev.slne.surf.surfapi.bukkit.api.glow.glowingApi
-import dev.slne.surf.surfapi.core.api.messages.adventure.sendText
+import dev.slne.surf.api.core.messages.adventure.sendText
+import dev.slne.surf.api.paper.glow.SurfGlowingApi
 import dev.slne.surf.vanish.core.service.vanishService
 import dev.slne.surf.vanish.paper.config.VanishConfiguration
 import dev.slne.surf.vanish.paper.plugin
@@ -46,7 +46,11 @@ object ConnectionListener : Listener {
                 }
 
                 vanishService.current(player)?.player?.let { currentPlayer ->
-                    glowingApi.makeGlowing(currentPlayer, player, VanishConfiguration.GLOW_COLOR)
+                    SurfGlowingApi.makeGlowing(
+                        currentPlayer,
+                        player,
+                        VanishConfiguration.GLOW_COLOR
+                    )
                 }
 
                 Bukkit.getOnlinePlayers()

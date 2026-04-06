@@ -1,7 +1,7 @@
 package dev.slne.surf.vanish.paper.config
 
-import dev.slne.surf.surfapi.core.api.config.manager.SpongeConfigManager
-import dev.slne.surf.surfapi.core.api.config.surfConfigApi
+import dev.slne.surf.api.core.config.SurfConfigApi
+import dev.slne.surf.api.core.config.manager.SpongeConfigManager
 import dev.slne.surf.vanish.paper.plugin
 import net.kyori.adventure.text.format.NamedTextColor
 import org.spongepowered.configurate.objectmapping.ConfigSerializable
@@ -15,12 +15,12 @@ class VanishConfiguration {
     private val configManager: SpongeConfigManager<VanishConfig>
 
     init {
-        surfConfigApi.createSpongeYmlConfig(
+        SurfConfigApi.createSpongeYmlConfig(
             VanishConfig::class.java,
             plugin.dataPath,
             "config.yml"
         )
-        configManager = surfConfigApi.getSpongeConfigManagerForConfig(
+        configManager = SurfConfigApi.getSpongeConfigManagerForConfig(
             VanishConfig::class.java
         )
         reload()

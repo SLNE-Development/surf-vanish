@@ -1,7 +1,7 @@
 package dev.slne.surf.vanish.paper.listener
 
 import com.destroystokyo.paper.event.player.PlayerPickupExperienceEvent
-import dev.slne.surf.surfapi.bukkit.api.event.cancel
+import dev.slne.surf.api.paper.event.cancel
 import dev.slne.surf.vanish.core.service.vanishService
 import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler

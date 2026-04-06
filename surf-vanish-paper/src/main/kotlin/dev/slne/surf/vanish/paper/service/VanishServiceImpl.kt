@@ -3,18 +3,16 @@ package dev.slne.surf.vanish.paper.service
 import com.github.shynixn.mccoroutine.folia.entityDispatcher
 import com.github.shynixn.mccoroutine.folia.launch
 import com.google.auto.service.AutoService
+import dev.slne.surf.api.core.font.toSmallCaps
+import dev.slne.surf.api.core.messages.adventure.buildText
+import dev.slne.surf.api.core.messages.adventure.sendText
+import dev.slne.surf.api.core.minimessage.miniMessage
+import dev.slne.surf.api.core.util.toObjectList
+import dev.slne.surf.api.core.util.toObjectSet
+import dev.slne.surf.api.paper.glow.SurfGlowingApi
+import dev.slne.surf.api.paper.scoreboard.SurfScoreboard
+import dev.slne.surf.api.paper.scoreboard.SurfScoreboardApi
 import dev.slne.surf.core.api.common.server.SurfServer
-import dev.slne.surf.surfapi.bukkit.api.glow.glowingApi
-import dev.slne.surf.surfapi.bukkit.api.scoreboard.ObsoleteScoreboardApi
-import dev.slne.surf.surfapi.bukkit.api.scoreboard.SurfScoreboard
-import dev.slne.surf.surfapi.bukkit.api.surfBukkitApi
-import dev.slne.surf.surfapi.core.api.font.toSmallCaps
-import dev.slne.surf.surfapi.core.api.messages.adventure.buildText
-import dev.slne.surf.surfapi.core.api.messages.adventure.sendText
-import dev.slne.surf.surfapi.core.api.minimessage.miniMessage
-import dev.slne.surf.surfapi.core.api.util.toObjectList
-import dev.slne.surf.surfapi.core.api.util.toObjectSet
-import dev.slne.surf.tab.api.redis.TabEntryUpdateRedisEvent
 import dev.slne.surf.vanish.api.redis.VanishStateUpdateRedisEvent
 import dev.slne.surf.vanish.core.service.VanishService
 import dev.slne.surf.vanish.core.service.vanishService
@@ -24,10 +22,7 @@ import dev.slne.surf.vanish.paper.hook.LuckPermsHook
 import dev.slne.surf.vanish.paper.plugin
 import dev.slne.surf.vanish.paper.redisApi
 import dev.slne.surf.vanish.paper.redisLoader
-import dev.slne.surf.vanish.paper.util.AuditableQueue
-import dev.slne.surf.vanish.paper.util.canVanishSee
-import dev.slne.surf.vanish.paper.util.currentTarget
-import dev.slne.surf.vanish.paper.util.displayKey
+import dev.slne.surf.vanish.paper.util.*
 import io.papermc.paper.threadedregions.scheduler.ScheduledTask
 import it.unimi.dsi.fastutil.objects.ObjectSet
 import kotlinx.coroutines.launch
@@ -40,7 +35,6 @@ import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.TimeUnit
 
-@OptIn(ObsoleteScoreboardApi::class)
 @AutoService(VanishService::class)
 class VanishServiceImpl : VanishService, Services.Fallback {
     private val _vanishedPlayers = ConcurrentHashMap.newKeySet<UUID>()
@@ -54,6 +48,8 @@ class VanishServiceImpl : VanishService, Services.Fallback {
         _playerQueues[player.uniqueId] = AuditableQueue()
 
         markVanished(player.uniqueId)
+
+        player.setMetaVanished(true)
 
         if (isSpectating(player.uniqueId)) {
             createAndShowScoreboard(player)
@@ -95,10 +91,12 @@ class VanishServiceImpl : VanishService, Services.Fallback {
 
     override fun reappear(player: Player) {
         current(player)?.player?.let { currentPlayer ->
-            glowingApi.removeGlowing(currentPlayer, player)
+            SurfGlowingApi.removeGlowing(currentPlayer, player)
         }
 
         markReappeared(player.uniqueId)
+
+        player.setMetaVanished(false)
 
         _vanishedPlayers.remove(player.uniqueId)
         _playerQueues.remove(player.uniqueId)
@@ -135,12 +133,6 @@ class VanishServiceImpl : VanishService, Services.Fallback {
                     }
                 }
         }
-
-
-
-        redisApi.publishEvent(
-            TabEntryUpdateRedisEvent(player.uniqueId)
-        )
     }
 
     override fun isVanished(playerUuid: UUID) = _vanishedPlayers.contains(playerUuid)
@@ -158,7 +150,7 @@ class VanishServiceImpl : VanishService, Services.Fallback {
 
     override fun next(player: Player): OfflinePlayer? {
         current(player)?.player?.let { currentPlayer ->
-            glowingApi.removeGlowing(currentPlayer, player)
+            SurfGlowingApi.removeGlowing(currentPlayer, player)
         }
 
         val next = _playerQueues[player.uniqueId]?.next(
@@ -171,7 +163,7 @@ class VanishServiceImpl : VanishService, Services.Fallback {
         }
 
         next?.player?.let { nextPlayer ->
-            glowingApi.makeGlowing(nextPlayer, player, VanishConfiguration.GLOW_COLOR)
+            SurfGlowingApi.makeGlowing(nextPlayer, player, VanishConfiguration.GLOW_COLOR)
         }
 
         return next
@@ -183,7 +175,7 @@ class VanishServiceImpl : VanishService, Services.Fallback {
         }
 
     override fun createAndShowScoreboard(player: Player) {
-        _scoreboards[player.uniqueId] = surfBukkitApi.createScoreboard(buildText {
+        _scoreboards[player.uniqueId] = SurfScoreboardApi.createScoreboard(buildText {
             primary("    SpectateMode    ", TextDecoration.BOLD)
         })
             .addLine(buildText {

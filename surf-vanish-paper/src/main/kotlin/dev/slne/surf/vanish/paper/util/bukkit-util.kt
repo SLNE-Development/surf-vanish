@@ -1,8 +1,10 @@
 package dev.slne.surf.vanish.paper.util
 
 import dev.slne.surf.vanish.core.service.vanishService
+import dev.slne.surf.vanish.paper.plugin
 import org.bukkit.Bukkit
 import org.bukkit.entity.Player
+import org.bukkit.metadata.FixedMetadataValue
 import java.util.*
 
 
@@ -33,4 +35,13 @@ fun Player.canVanishSee(target: Player): Boolean {
     val targetPriority = target.getVanishPriority()
 
     return ownPriority >= targetPriority
+}
+
+@Suppress("DEPRECATION")
+fun Player.setMetaVanished(vanished: Boolean) {
+    if (vanished) {
+        this.setMetadata("vanished", FixedMetadataValue(plugin, true))
+    } else {
+        this.removeMetadata("vanished", plugin)
+    }
 }

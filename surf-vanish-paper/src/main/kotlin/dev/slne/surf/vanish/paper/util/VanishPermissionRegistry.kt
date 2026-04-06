@@ -1,6 +1,6 @@
 package dev.slne.surf.vanish.paper.util
 
-import dev.slne.surf.surfapi.bukkit.api.permission.PermissionRegistry
+import dev.slne.surf.api.paper.permission.PermissionRegistry
 
 object VanishPermissionRegistry : PermissionRegistry() {
     const val BASE = "surf.vanish"

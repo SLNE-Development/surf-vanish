@@ -2,8 +2,8 @@ package dev.slne.surf.vanish.paper
 
 import com.github.retrooper.packetevents.PacketEvents
 import com.github.shynixn.mccoroutine.folia.SuspendingJavaPlugin
+import dev.slne.surf.api.paper.event.register
 import dev.slne.surf.core.api.paper.CorePlayerStatusAccess
-import dev.slne.surf.surfapi.bukkit.api.event.register
 import dev.slne.surf.vanish.core.service.vanishService
 import dev.slne.surf.vanish.paper.command.vanishCommand
 import dev.slne.surf.vanish.paper.config.VanishConfiguration
