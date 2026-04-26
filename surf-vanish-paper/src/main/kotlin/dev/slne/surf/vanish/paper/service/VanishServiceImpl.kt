@@ -12,6 +12,8 @@ import dev.slne.surf.api.core.util.toObjectSet
 import dev.slne.surf.api.paper.glow.SurfGlowingApi
 import dev.slne.surf.api.paper.scoreboard.SurfScoreboard
 import dev.slne.surf.api.paper.scoreboard.SurfScoreboardApi
+import dev.slne.surf.vanish.api.event.PlayerReappearEvent
+import dev.slne.surf.vanish.api.event.PlayerVanishEvent
 import dev.slne.surf.vanish.core.redisLoader
 import dev.slne.surf.vanish.core.service.VanishService
 import dev.slne.surf.vanish.core.service.vanishService
@@ -42,6 +44,9 @@ class VanishServiceImpl : VanishService, Services.Fallback {
     override fun vanish(player: Player) {
         redisLoader.vanishedPlayers.add(player.uniqueId)
         _playerQueues[player.uniqueId] = AuditableQueue()
+
+
+        PlayerVanishEvent(player.uniqueId).callEvent()
 
         player.setMetaVanished(true)
 
@@ -87,6 +92,8 @@ class VanishServiceImpl : VanishService, Services.Fallback {
         current(player)?.player?.let { currentPlayer ->
             SurfGlowingApi.removeGlowing(currentPlayer, player)
         }
+
+        PlayerReappearEvent(player.uniqueId).callEvent()
 
         player.setMetaVanished(false)
 
