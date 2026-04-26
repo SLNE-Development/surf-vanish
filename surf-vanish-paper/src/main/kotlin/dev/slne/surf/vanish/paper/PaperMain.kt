@@ -4,7 +4,9 @@ import com.github.retrooper.packetevents.PacketEvents
 import com.github.shynixn.mccoroutine.folia.SuspendingJavaPlugin
 import dev.slne.surf.api.paper.event.register
 import dev.slne.surf.core.api.paper.CorePlayerStatusAccess
+import dev.slne.surf.vanish.core.redisLoader
 import dev.slne.surf.vanish.core.service.vanishService
+import dev.slne.surf.vanish.paper.command.nickCommand
 import dev.slne.surf.vanish.paper.command.vanishCommand
 import dev.slne.surf.vanish.paper.config.VanishConfiguration
 import dev.slne.surf.vanish.paper.listener.*
@@ -24,7 +26,10 @@ class PaperMain : SuspendingJavaPlugin() {
         TabCompleteListener.register()
         PacketEvents.getAPI().eventManager.registerListener(HotkeyListener)
 
+        redisLoader.connect()
+
         vanishCommand()
+        nickCommand()
 
         CorePlayerStatusAccess.registerHandler { viewer, player ->
             if (!vanishService.isVanished(player.uuid)) {
@@ -38,8 +43,6 @@ class PaperMain : SuspendingJavaPlugin() {
         }
 
         VanishServiceImpl.startTask()
-
-        redisLoader.connect()
     }
 
     override fun onDisable() {
