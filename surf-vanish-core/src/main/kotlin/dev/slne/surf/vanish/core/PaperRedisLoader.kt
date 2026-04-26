@@ -13,7 +13,7 @@ class BukkitRedisLoader {
 
     fun connect() {
         redisApi = RedisApi.create()
-        vanishedPlayers = redisApi.createSyncSet<UUID>("surf-vanish:vanished_players")
+        vanishedPlayers = redisApi.createSyncSet<UUID>("surf-vanish:vanished_players_v2")
         redisApi.freezeAndConnect()
     }
 
