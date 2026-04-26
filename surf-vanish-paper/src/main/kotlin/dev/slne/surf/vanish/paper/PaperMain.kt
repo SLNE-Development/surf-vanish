@@ -26,6 +26,8 @@ class PaperMain : SuspendingJavaPlugin() {
         TabCompleteListener.register()
         PacketEvents.getAPI().eventManager.registerListener(HotkeyListener)
 
+        redisLoader.connect()
+
         vanishCommand()
         nickCommand()
 
@@ -41,8 +43,6 @@ class PaperMain : SuspendingJavaPlugin() {
         }
 
         VanishServiceImpl.startTask()
-
-        redisLoader.connect()
     }
 
     override fun onDisable() {
