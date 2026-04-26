@@ -52,6 +52,7 @@ class NickServiceImpl : NickService, Services.Fallback {
         }
 
         nickedPlayers.remove(player.uniqueId)
+        oldTextures.remove(player.uniqueId)
 
         player.displayName(player.getPrefixedName())
         PlayerUnNickEvent(player.uniqueId).callEvent()

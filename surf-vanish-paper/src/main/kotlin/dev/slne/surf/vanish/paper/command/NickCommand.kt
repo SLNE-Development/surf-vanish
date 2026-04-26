@@ -6,6 +6,9 @@ import dev.slne.surf.api.paper.command.executors.playerExecutorSuspend
 import dev.slne.surf.vanish.core.service.NickService
 import dev.slne.surf.vanish.paper.util.VanishPermissionRegistry
 
+
+private val validNameRegex = Regex("^[a-zA-Z0-9_]{3,16}$")
+
 fun nickCommand() = commandTree("nick") {
     withPermission(VanishPermissionRegistry.NICK_COMMAND)
 
@@ -27,10 +30,10 @@ fun nickCommand() = commandTree("nick") {
         playerExecutorSuspend { player, arguments ->
             val nick: String by arguments
 
-            if (nick.length !in 3..16) {
+            if (!validNameRegex.matches(nick)) {
                 player.sendText {
                     appendErrorPrefix()
-                    error("Der Nickname muss zwischen 3 und 16 Zeichen lang sein.")
+                    error("Der Nickname ist ungültig. Er muss 3-16 Zeichen lang sein und darf nur Buchstaben, Zahlen und Unterstriche enthalten.")
                 }
                 return@playerExecutorSuspend
             }
