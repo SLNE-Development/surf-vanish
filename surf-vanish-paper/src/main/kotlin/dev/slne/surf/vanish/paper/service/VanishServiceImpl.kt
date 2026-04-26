@@ -12,14 +12,13 @@ import dev.slne.surf.api.core.util.toObjectSet
 import dev.slne.surf.api.paper.glow.SurfGlowingApi
 import dev.slne.surf.api.paper.scoreboard.SurfScoreboard
 import dev.slne.surf.api.paper.scoreboard.SurfScoreboardApi
-import dev.slne.surf.core.api.common.server.SurfServer
+import dev.slne.surf.vanish.core.redisLoader
 import dev.slne.surf.vanish.core.service.VanishService
 import dev.slne.surf.vanish.core.service.vanishService
 import dev.slne.surf.vanish.paper.config
 import dev.slne.surf.vanish.paper.config.VanishConfiguration
 import dev.slne.surf.vanish.paper.hook.LuckPermsHook
 import dev.slne.surf.vanish.paper.plugin
-import dev.slne.surf.vanish.paper.redisLoader
 import dev.slne.surf.vanish.paper.util.*
 import io.papermc.paper.threadedregions.scheduler.ScheduledTask
 import it.unimi.dsi.fastutil.objects.ObjectSet
@@ -35,17 +34,14 @@ import java.util.concurrent.TimeUnit
 
 @AutoService(VanishService::class)
 class VanishServiceImpl : VanishService, Services.Fallback {
-    private val _vanishedPlayers = ConcurrentHashMap.newKeySet<UUID>()
     private val _playerQueues = ConcurrentHashMap<UUID, AuditableQueue>()
     private val _scoreboards = ConcurrentHashMap<UUID, SurfScoreboard>()
     private val _spectateModePlayers = ConcurrentHashMap.newKeySet<UUID>()
     private val _playerFlyStates = ConcurrentHashMap<UUID, Boolean>()
 
     override fun vanish(player: Player) {
-        _vanishedPlayers.add(player.uniqueId)
+        redisLoader.vanishedPlayers.add(player.uniqueId)
         _playerQueues[player.uniqueId] = AuditableQueue()
-
-        markVanished(player.uniqueId)
 
         player.setMetaVanished(true)
 
@@ -92,11 +88,9 @@ class VanishServiceImpl : VanishService, Services.Fallback {
             SurfGlowingApi.removeGlowing(currentPlayer, player)
         }
 
-        markReappeared(player.uniqueId)
-
         player.setMetaVanished(false)
 
-        _vanishedPlayers.remove(player.uniqueId)
+        redisLoader.vanishedPlayers.remove(player.uniqueId)
         _playerQueues.remove(player.uniqueId)
 
         hideAndDeleteScoreboard(player)
@@ -133,12 +127,12 @@ class VanishServiceImpl : VanishService, Services.Fallback {
         }
     }
 
-    override fun isVanished(playerUuid: UUID) = _vanishedPlayers.contains(playerUuid)
+    override fun isVanished(playerUuid: UUID) = redisLoader.vanishedPlayers.contains(playerUuid)
     override fun all(): ObjectSet<OfflinePlayer> =
-        _vanishedPlayers.map { Bukkit.getOfflinePlayer(it) }.toObjectSet()
+        redisLoader.vanishedPlayers.snapshot().map { Bukkit.getOfflinePlayer(it) }.toObjectSet()
 
     override fun allOnline(): ObjectSet<Player> =
-        _vanishedPlayers.mapNotNull { Bukkit.getPlayer(it) }.toObjectSet()
+        redisLoader.vanishedPlayers.snapshot().mapNotNull { Bukkit.getPlayer(it) }.toObjectSet()
 
     override fun previous(player: Player): OfflinePlayer? {
         return _playerQueues[player.uniqueId]?.back()?.let {
@@ -307,19 +301,4 @@ class VanishServiceImpl : VanishService, Services.Fallback {
             }
         }
     }
-}
-
-fun markVanished(player: UUID) {
-    redisLoader.vanishedPlayers.put(
-        SurfServer.current().name,
-        (redisLoader.vanishedPlayers[SurfServer.current().name] ?: mutableListOf()) + player
-    )
-}
-
-fun markReappeared(player: UUID) {
-    redisLoader.vanishedPlayers.put(
-        SurfServer.current().name,
-        (redisLoader.vanishedPlayers[SurfServer.current().name]
-            ?: mutableListOf()).filterNot { it == player }
-    )
 }

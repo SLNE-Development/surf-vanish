@@ -1,7 +1,7 @@
-package dev.slne.surf.vanish.paper
+package dev.slne.surf.vanish.core
 
 import dev.slne.surf.redis.RedisApi
-import dev.slne.surf.redis.sync.map.SyncMap
+import dev.slne.surf.redis.sync.set.SyncSet
 import java.util.*
 
 val redisLoader = BukkitRedisLoader()
@@ -9,11 +9,11 @@ val redisApi get() = redisLoader.redisApi
 
 class BukkitRedisLoader {
     lateinit var redisApi: RedisApi
-    lateinit var vanishedPlayers: SyncMap<String, List<UUID>>
+    lateinit var vanishedPlayers: SyncSet<UUID>
 
     fun connect() {
         redisApi = RedisApi.create()
-        vanishedPlayers = redisApi.createSyncMap<String, List<UUID>>("surf-vanish:vanished_players")
+        vanishedPlayers = redisApi.createSyncSet<UUID>("surf-vanish:vanished_players")
         redisApi.freezeAndConnect()
     }
 
