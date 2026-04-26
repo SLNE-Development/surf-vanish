@@ -2,6 +2,7 @@ package dev.slne.surf.vanish.paper.command
 
 import dev.jorel.commandapi.kotlindsl.*
 import dev.slne.surf.api.core.messages.adventure.sendText
+import dev.slne.surf.api.paper.command.executors.playerExecutorSuspend
 import dev.slne.surf.vanish.core.service.NickService
 import dev.slne.surf.vanish.paper.util.VanishPermissionRegistry
 
@@ -23,7 +24,7 @@ fun nickCommand() = commandTree("nick") {
     }
 
     stringArgument("nick") {
-        playerExecutor { player, arguments ->
+        playerExecutorSuspend { player, arguments ->
             val nick: String by arguments
 
             if (nick.length !in 3..16) {
@@ -31,7 +32,7 @@ fun nickCommand() = commandTree("nick") {
                     appendErrorPrefix()
                     error("Der Nickname muss zwischen 3 und 16 Zeichen lang sein.")
                 }
-                return@playerExecutor
+                return@playerExecutorSuspend
             }
 
             NickService.nick(player, nick)

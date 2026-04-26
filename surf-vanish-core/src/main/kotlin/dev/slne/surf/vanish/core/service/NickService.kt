@@ -8,7 +8,7 @@ private val service = requiredService<NickService>()
 interface NickService {
     fun isNicked(player: Player): Boolean
 
-    fun nick(player: Player, nickname: String)
+    suspend fun nick(player: Player, nickname: String)
     fun unnick(player: Player)
 
     companion object : NickService by service

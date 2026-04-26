@@ -10,8 +10,8 @@ import dev.slne.surf.api.paper.util.getPrefixedName
 import dev.slne.surf.vanish.api.event.PlayerNickEvent
 import dev.slne.surf.vanish.api.event.PlayerUnNickEvent
 import dev.slne.surf.vanish.core.service.NickService
+import dev.slne.surf.vanish.paper.util.retrieveSkin
 import net.kyori.adventure.util.Services
-import org.bukkit.Bukkit
 import org.bukkit.entity.Player
 import java.util.*
 
@@ -22,9 +22,9 @@ class NickServiceImpl : NickService, Services.Fallback {
 
     override fun isNicked(player: Player) = player.uniqueId in nickedPlayers
 
-    override fun nick(player: Player, nickname: String) {
-        val textures =
-            Bukkit.getOfflinePlayer(nickname).playerProfile.properties.find { it.name == "textures" }
+    override suspend fun nick(player: Player, nickname: String) {
+        val textures = retrieveSkin(nickname)
+
         oldTextures[player.uniqueId] =
             player.playerProfile.properties.find { it.name == "textures" }
         nickedPlayers[player.uniqueId] = nickname
