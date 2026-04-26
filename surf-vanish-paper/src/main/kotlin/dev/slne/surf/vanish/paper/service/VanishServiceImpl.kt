@@ -13,14 +13,12 @@ import dev.slne.surf.api.paper.glow.SurfGlowingApi
 import dev.slne.surf.api.paper.scoreboard.SurfScoreboard
 import dev.slne.surf.api.paper.scoreboard.SurfScoreboardApi
 import dev.slne.surf.core.api.common.server.SurfServer
-import dev.slne.surf.vanish.api.redis.VanishStateUpdateRedisEvent
 import dev.slne.surf.vanish.core.service.VanishService
 import dev.slne.surf.vanish.core.service.vanishService
 import dev.slne.surf.vanish.paper.config
 import dev.slne.surf.vanish.paper.config.VanishConfiguration
 import dev.slne.surf.vanish.paper.hook.LuckPermsHook
 import dev.slne.surf.vanish.paper.plugin
-import dev.slne.surf.vanish.paper.redisApi
 import dev.slne.surf.vanish.paper.redisLoader
 import dev.slne.surf.vanish.paper.util.*
 import io.papermc.paper.threadedregions.scheduler.ScheduledTask
@@ -316,7 +314,6 @@ fun markVanished(player: UUID) {
         SurfServer.current().name,
         (redisLoader.vanishedPlayers[SurfServer.current().name] ?: mutableListOf()) + player
     )
-    redisApi.publishEvent(VanishStateUpdateRedisEvent(player, true))
 }
 
 fun markReappeared(player: UUID) {
@@ -325,5 +322,4 @@ fun markReappeared(player: UUID) {
         (redisLoader.vanishedPlayers[SurfServer.current().name]
             ?: mutableListOf()).filterNot { it == player }
     )
-    redisApi.publishEvent(VanishStateUpdateRedisEvent(player, false))
 }
