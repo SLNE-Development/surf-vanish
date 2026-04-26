@@ -5,7 +5,6 @@ import com.google.auto.service.AutoService
 import dev.slne.surf.api.core.luckperms.LuckPermsAccess
 import dev.slne.surf.api.core.messages.adventure.buildText
 import dev.slne.surf.api.core.minimessage.miniMessage
-import dev.slne.surf.api.core.util.mutableObject2ObjectMapOf
 import dev.slne.surf.api.paper.util.getPrefixedName
 import dev.slne.surf.vanish.api.event.PlayerNickEvent
 import dev.slne.surf.vanish.api.event.PlayerUnNickEvent
@@ -14,19 +13,20 @@ import dev.slne.surf.vanish.paper.util.retrieveSkin
 import net.kyori.adventure.util.Services
 import org.bukkit.entity.Player
 import java.util.*
+import java.util.concurrent.ConcurrentHashMap
 
 @AutoService(NickService::class)
 class NickServiceImpl : NickService, Services.Fallback {
-    private val nickedPlayers = mutableObject2ObjectMapOf<UUID, String>()
-    private val oldTextures = mutableObject2ObjectMapOf<UUID, ProfileProperty>()
+    private val nickedPlayers = ConcurrentHashMap<UUID, String>()
+    private val oldTextures = ConcurrentHashMap<UUID, ProfileProperty>()
 
-    override fun isNicked(player: Player) = player.uniqueId in nickedPlayers
+    override fun isNicked(player: Player) = nickedPlayers.containsKey(player.uniqueId)
 
     override suspend fun nick(player: Player, nickname: String) {
         val textures = retrieveSkin(nickname)
 
         oldTextures[player.uniqueId] =
-            player.playerProfile.properties.find { it.name == "textures" }
+            player.playerProfile.properties.find { it.name == "textures" } ?: return
         nickedPlayers[player.uniqueId] = nickname
 
         player.playerProfile = player.playerProfile.apply {
