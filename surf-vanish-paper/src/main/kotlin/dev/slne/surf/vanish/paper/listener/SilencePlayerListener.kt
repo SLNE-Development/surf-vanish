@@ -9,6 +9,7 @@ import org.bukkit.event.Listener
 import org.bukkit.event.block.Action
 import org.bukkit.event.block.EntityBlockFormEvent
 import org.bukkit.event.entity.EntityDamageEvent
+import org.bukkit.event.entity.EntityMountEvent
 import org.bukkit.event.entity.EntityTargetEvent
 import org.bukkit.event.entity.FoodLevelChangeEvent
 import org.bukkit.event.player.*
@@ -24,8 +25,6 @@ object SilencePlayerListener : Listener {
 
     @EventHandler
     fun onPressurePlateActive(event: PlayerInteractEvent) {
-        val player = event.player
-
         if (!vanishService.isVanished(event.player)) {
             return
         }
@@ -101,10 +100,11 @@ object SilencePlayerListener : Listener {
     fun onDamage(event: EntityDamageEvent) {
         val entity = event.entity
 
-        if (entity is Player)
+        if (entity is Player) {
             if (vanishService.isVanished(entity)) {
                 event.cancel()
             }
+        }
     }
 
     @EventHandler
@@ -116,9 +116,19 @@ object SilencePlayerListener : Listener {
 
     @EventHandler
     fun onBucketEmpty(event: PlayerBucketEmptyEvent) {
-
         if (vanishService.isVanished(event.player)) {
             event.cancel()
+        }
+    }
+
+    @EventHandler
+    fun onEntityMount(event: EntityMountEvent) {
+        val entity = event.entity
+
+        if (entity is Player) {
+            if (vanishService.isVanished(entity)) {
+                event.cancel()
+            }
         }
     }
 }
