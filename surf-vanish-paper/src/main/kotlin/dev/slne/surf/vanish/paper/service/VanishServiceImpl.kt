@@ -1,7 +1,5 @@
 package dev.slne.surf.vanish.paper.service
 
-import com.github.shynixn.mccoroutine.folia.entityDispatcher
-import com.github.shynixn.mccoroutine.folia.launch
 import com.google.auto.service.AutoService
 import dev.slne.surf.api.core.font.toSmallCaps
 import dev.slne.surf.api.core.messages.adventure.buildText
@@ -24,7 +22,7 @@ import dev.slne.surf.vanish.paper.plugin
 import dev.slne.surf.vanish.paper.util.*
 import io.papermc.paper.threadedregions.scheduler.ScheduledTask
 import it.unimi.dsi.fastutil.objects.ObjectSet
-import kotlinx.coroutines.launch
+import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.TextDecoration
 import net.kyori.adventure.util.Services
 import org.bukkit.Bukkit
@@ -54,38 +52,34 @@ class VanishServiceImpl : VanishService, Services.Fallback {
             createAndShowScoreboard(player)
         }
 
-        plugin.launch {
-            Bukkit.getOnlinePlayers()
-                .filterNot { it.uniqueId == player.uniqueId }
-                .forEach { onlinePlayer ->
+        Bukkit.getOnlinePlayers()
+            .filterNot { it.uniqueId == player.uniqueId }
+            .forEach { onlinePlayer ->
 
-                    if (!onlinePlayer.canVanishSee(player)) {
-                        launch(plugin.entityDispatcher(onlinePlayer)) {
-                            onlinePlayer.hidePlayer(plugin, player)
+                if (!onlinePlayer.canVanishSee(player)) {
+                    onlinePlayer.hidePlayer(plugin, player)
 
-                            if (config.spoofConnectionMessages) {
-                                onlinePlayer.sendText {
-                                    append(
-                                        miniMessage.deserialize(
-                                            "<dark_gray>[<red>-<dark_gray>] ${
-                                                LuckPermsHook.getPrefix(
-                                                    player
-                                                )
-                                            }${player.name}"
-                                        )
-                                    )
-                                }
-                            }
-                        }
-                    } else {
+                    if (config.spoofConnectionMessages) {
                         onlinePlayer.sendText {
-                            appendInfoPrefix()
-                            variableValue(player.name)
-                            info(" ist nun unsichtbar.")
+                            append(
+                                miniMessage.deserialize(
+                                    "<dark_gray>[<red>-<dark_gray>] ${
+                                        LuckPermsHook.getPrefix(
+                                            player
+                                        )
+                                    }${player.name}"
+                                )
+                            )
                         }
                     }
+                } else {
+                    onlinePlayer.sendText {
+                        appendInfoPrefix()
+                        variableValue(player.name)
+                        info(" ist nun unsichtbar.")
+                    }
                 }
-        }
+            }
     }
 
     override fun reappear(player: Player) {
@@ -95,6 +89,8 @@ class VanishServiceImpl : VanishService, Services.Fallback {
 
         PlayerReappearEvent(player.uniqueId).callEvent()
 
+        player.sendActionBar(Component.empty())
+
         player.setMetaVanished(false)
 
         redisLoader.vanishedPlayers.remove(player.uniqueId)
@@ -102,36 +98,32 @@ class VanishServiceImpl : VanishService, Services.Fallback {
 
         hideAndDeleteScoreboard(player)
 
-        plugin.launch {
-            Bukkit.getOnlinePlayers()
-                .filterNot { it.uniqueId == player.uniqueId }
-                .forEach { onlinePlayer ->
-                    if (!onlinePlayer.canVanishSee(player)) {
-                        launch(plugin.entityDispatcher(onlinePlayer)) {
-                            onlinePlayer.showPlayer(plugin, player)
-                            if (config.spoofConnectionMessages) {
-                                onlinePlayer.sendText {
-                                    append(
-                                        miniMessage.deserialize(
-                                            "<dark_gray>[<green>+<dark_gray>] ${
-                                                LuckPermsHook.getPrefix(
-                                                    player
-                                                )
-                                            }${player.name}"
-                                        )
-                                    )
-                                }
-                            }
-                        }
-                    } else {
+        Bukkit.getOnlinePlayers()
+            .filterNot { it.uniqueId == player.uniqueId }
+            .forEach { onlinePlayer ->
+                if (!onlinePlayer.canVanishSee(player)) {
+                    onlinePlayer.showPlayer(plugin, player)
+                    if (config.spoofConnectionMessages) {
                         onlinePlayer.sendText {
-                            appendInfoPrefix()
-                            variableValue(player.name)
-                            info(" ist nun sichtbar.")
+                            append(
+                                miniMessage.deserialize(
+                                    "<dark_gray>[<green>+<dark_gray>] ${
+                                        LuckPermsHook.getPrefix(
+                                            player
+                                        )
+                                    }${player.name}"
+                                )
+                            )
                         }
                     }
+                } else {
+                    onlinePlayer.sendText {
+                        appendInfoPrefix()
+                        variableValue(player.name)
+                        info(" ist nun sichtbar.")
+                    }
                 }
-        }
+            }
     }
 
     override fun isVanished(playerUuid: UUID) = redisLoader.vanishedPlayers.contains(playerUuid)
