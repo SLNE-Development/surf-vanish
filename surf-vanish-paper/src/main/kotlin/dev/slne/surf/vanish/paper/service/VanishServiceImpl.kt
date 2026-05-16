@@ -43,9 +43,6 @@ class VanishServiceImpl : VanishService, Services.Fallback {
         redisLoader.vanishedPlayers.add(player.uniqueId)
         _playerQueues[player.uniqueId] = AuditableQueue()
 
-
-        PlayerVanishEvent(player.uniqueId).callEvent()
-
         player.setMetaVanished(true)
 
         if (isSpectating(player.uniqueId)) {
@@ -80,6 +77,8 @@ class VanishServiceImpl : VanishService, Services.Fallback {
                     }
                 }
             }
+
+        PlayerVanishEvent(player.uniqueId).callEvent()
     }
 
     override fun reappear(player: Player) {
@@ -87,10 +86,7 @@ class VanishServiceImpl : VanishService, Services.Fallback {
             SurfGlowingApi.removeGlowing(currentPlayer, player)
         }
 
-        PlayerReappearEvent(player.uniqueId).callEvent()
-
         player.sendActionBar(Component.empty())
-
         player.setMetaVanished(false)
 
         redisLoader.vanishedPlayers.remove(player.uniqueId)
@@ -124,6 +120,8 @@ class VanishServiceImpl : VanishService, Services.Fallback {
                     }
                 }
             }
+
+        PlayerReappearEvent(player.uniqueId).callEvent()
     }
 
     override fun isVanished(playerUuid: UUID) = redisLoader.vanishedPlayers.contains(playerUuid)
