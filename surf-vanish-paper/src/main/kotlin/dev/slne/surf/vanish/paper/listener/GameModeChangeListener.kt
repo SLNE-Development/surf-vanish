@@ -1,9 +1,6 @@
 package dev.slne.surf.vanish.paper.listener
 
-import com.github.shynixn.mccoroutine.folia.entityDispatcher
-import com.github.shynixn.mccoroutine.folia.launch
 import dev.slne.surf.vanish.core.service.vanishService
-import dev.slne.surf.vanish.paper.plugin
 import dev.slne.surf.vanish.paper.util.VanishPermissionRegistry
 import org.bukkit.GameMode
 import org.bukkit.event.EventHandler
@@ -19,10 +16,8 @@ object GameModeChangeListener : Listener {
             }
 
             if (vanishService.getFlyState(event.player.uniqueId)) {
-                plugin.launch(plugin.entityDispatcher(event.player)) {
-                    event.player.allowFlight = true
-                    event.player.isFlying = true
-                }
+                event.player.allowFlight = true
+                event.player.isFlying = true
             }
         } else {
             if (!event.player.hasPermission(VanishPermissionRegistry.VANISH_SAVE_FLY_STATE)) {
