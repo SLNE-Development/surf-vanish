@@ -1,5 +1,6 @@
 package dev.slne.surf.vanish.paper.service
 
+import com.github.shynixn.mccoroutine.folia.launch
 import com.google.auto.service.AutoService
 import dev.slne.surf.api.core.font.toSmallCaps
 import dev.slne.surf.api.core.messages.adventure.buildText
@@ -10,6 +11,7 @@ import dev.slne.surf.api.core.util.toObjectSet
 import dev.slne.surf.api.paper.glow.SurfGlowingApi
 import dev.slne.surf.api.paper.scoreboard.SurfScoreboard
 import dev.slne.surf.api.paper.scoreboard.SurfScoreboardApi
+import dev.slne.surf.api.paper.util.forEachPlayerInRegion
 import dev.slne.surf.vanish.api.event.PlayerReappearEvent
 import dev.slne.surf.vanish.api.event.PlayerVanishEvent
 import dev.slne.surf.vanish.core.redisLoader
@@ -40,7 +42,10 @@ class VanishServiceImpl : VanishService, Services.Fallback {
     private val _playerFlyStates = ConcurrentHashMap<UUID, Boolean>()
 
     override fun vanish(player: Player) {
-        redisLoader.vanishedPlayers.add(player.uniqueId)
+        if (redisLoader.vanishedPlayers.add(player.uniqueId).not()) {
+            return
+        }
+
         _playerQueues[player.uniqueId] = AuditableQueue()
 
         player.setMetaVanished(true)
@@ -49,39 +54,49 @@ class VanishServiceImpl : VanishService, Services.Fallback {
             createAndShowScoreboard(player)
         }
 
-        Bukkit.getOnlinePlayers()
-            .filterNot { it.uniqueId == player.uniqueId }
-            .forEach { onlinePlayer ->
+        val prefix = LuckPermsHook.getPrefix(player)
+
+        val spoofMessage =
+            if (config.spoofConnectionMessages) {
+                miniMessage.deserialize(
+                    "<dark_gray>[<red>-<dark_gray>] ${prefix}${player.name}"
+                )
+            } else {
+                null
+            }
+
+        val visibleMessage = buildText {
+            appendInfoPrefix()
+            variableValue(player.name)
+            info(" ist nun unsichtbar.")
+        }
+
+        plugin.launch {
+            forEachPlayerInRegion(plugin, { onlinePlayer ->
+                if (onlinePlayer.uniqueId == player.uniqueId) {
+                    return@forEachPlayerInRegion
+                }
 
                 if (!onlinePlayer.canVanishSee(player)) {
-                    onlinePlayer.hidePlayer(plugin, player)
+                    if (onlinePlayer.canSee(player)) {
+                        onlinePlayer.hidePlayer(plugin, player)
+                    }
 
-                    if (config.spoofConnectionMessages) {
-                        onlinePlayer.sendText {
-                            append(
-                                miniMessage.deserialize(
-                                    "<dark_gray>[<red>-<dark_gray>] ${
-                                        LuckPermsHook.getPrefix(
-                                            player
-                                        )
-                                    }${player.name}"
-                                )
-                            )
-                        }
-                    }
+                    spoofMessage?.let(onlinePlayer::sendMessage)
                 } else {
-                    onlinePlayer.sendText {
-                        appendInfoPrefix()
-                        variableValue(player.name)
-                        info(" ist nun unsichtbar.")
-                    }
+                    onlinePlayer.sendMessage(visibleMessage)
                 }
-            }
+            }, true)
+        }
 
         PlayerVanishEvent(player.uniqueId).callEvent()
     }
 
     override fun reappear(player: Player) {
+        if (redisLoader.vanishedPlayers.remove(player.uniqueId).not()) {
+            return
+        }
+
         current(player)?.player?.let { currentPlayer ->
             SurfGlowingApi.removeGlowing(currentPlayer, player)
         }
@@ -89,37 +104,44 @@ class VanishServiceImpl : VanishService, Services.Fallback {
         player.sendActionBar(Component.empty())
         player.setMetaVanished(false)
 
-        redisLoader.vanishedPlayers.remove(player.uniqueId)
         _playerQueues.remove(player.uniqueId)
 
         hideAndDeleteScoreboard(player)
 
-        Bukkit.getOnlinePlayers()
-            .filterNot { it.uniqueId == player.uniqueId }
-            .forEach { onlinePlayer ->
-                if (!onlinePlayer.canVanishSee(player)) {
-                    onlinePlayer.showPlayer(plugin, player)
-                    if (config.spoofConnectionMessages) {
-                        onlinePlayer.sendText {
-                            append(
-                                miniMessage.deserialize(
-                                    "<dark_gray>[<green>+<dark_gray>] ${
-                                        LuckPermsHook.getPrefix(
-                                            player
-                                        )
-                                    }${player.name}"
-                                )
-                            )
-                        }
-                    }
-                } else {
-                    onlinePlayer.sendText {
-                        appendInfoPrefix()
-                        variableValue(player.name)
-                        info(" ist nun sichtbar.")
-                    }
-                }
+        val prefix = LuckPermsHook.getPrefix(player)
+
+        val spoofMessage =
+            if (config.spoofConnectionMessages) {
+                miniMessage.deserialize(
+                    "<dark_gray>[<green>+<dark_gray>] ${prefix}${player.name}"
+                )
+            } else {
+                null
             }
+
+        val visibleMessage = buildText {
+            appendInfoPrefix()
+            variableValue(player.name)
+            info(" ist nun sichtbar.")
+        }
+
+        plugin.launch {
+            forEachPlayerInRegion(plugin, { onlinePlayer ->
+                if (onlinePlayer.uniqueId == player.uniqueId) {
+                    return@forEachPlayerInRegion
+                }
+
+                if (!onlinePlayer.canVanishSee(player)) {
+                    if (!onlinePlayer.canSee(player)) {
+                        onlinePlayer.showPlayer(plugin, player)
+                    }
+
+                    spoofMessage?.let(onlinePlayer::sendMessage)
+                } else {
+                    onlinePlayer.sendMessage(visibleMessage)
+                }
+            }, true)
+        }
 
         PlayerReappearEvent(player.uniqueId).callEvent()
     }
