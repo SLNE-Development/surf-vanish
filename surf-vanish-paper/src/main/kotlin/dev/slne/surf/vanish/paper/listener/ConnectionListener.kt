@@ -9,6 +9,7 @@ import dev.slne.surf.vanish.paper.config.VanishConfiguration
 import dev.slne.surf.vanish.paper.plugin
 import dev.slne.surf.vanish.paper.util.VanishPermissionRegistry
 import dev.slne.surf.vanish.paper.util.canVanishSee
+import io.papermc.paper.event.player.PlayerClientLoadedWorldEvent
 import kotlinx.coroutines.withContext
 import org.bukkit.Bukkit
 import org.bukkit.event.EventHandler
@@ -23,13 +24,6 @@ object ConnectionListener : Listener {
 
         if (vanishService.isVanished(player)) {
             event.joinMessage(null)
-        }
-
-        if (player.hasPermission(VanishPermissionRegistry.VANISH_SAVE_FLY_STATE)) {
-            if (vanishService.getFlyState(player.uniqueId)) {
-                player.allowFlight = true
-                player.isFlying = true
-            }
         }
 
         vanishService.allOnline().forEach { vanishedPlayer ->
@@ -72,6 +66,18 @@ object ConnectionListener : Listener {
             player.sendText {
                 appendInfoPrefix()
                 info("Du bist für andere Spieler unsichtbar.")
+            }
+        }
+    }
+
+    @EventHandler
+    fun onClientLoaded(event: PlayerClientLoadedWorldEvent) {
+        val player = event.player
+
+        if (player.hasPermission(VanishPermissionRegistry.VANISH_SAVE_FLY_STATE)) {
+            if (vanishService.getFlyState(player.uniqueId)) {
+                player.allowFlight = true
+                player.isFlying = true
             }
         }
     }
