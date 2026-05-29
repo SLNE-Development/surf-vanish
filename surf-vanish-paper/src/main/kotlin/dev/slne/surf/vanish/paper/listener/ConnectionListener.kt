@@ -12,13 +12,12 @@ import dev.slne.surf.vanish.paper.util.canVanishSee
 import kotlinx.coroutines.launch
 import org.bukkit.Bukkit
 import org.bukkit.event.EventHandler
-import org.bukkit.event.EventPriority
 import org.bukkit.event.Listener
 import org.bukkit.event.player.PlayerJoinEvent
 import org.bukkit.event.player.PlayerQuitEvent
 
 object ConnectionListener : Listener {
-    @EventHandler(priority = EventPriority.HIGHEST)
+    @EventHandler
     fun onConnect(event: PlayerJoinEvent) {
         val player = event.player
 
@@ -78,7 +77,7 @@ object ConnectionListener : Listener {
         }
     }
 
-    @EventHandler(priority = EventPriority.HIGHEST)
+    @EventHandler
     fun onDisconnect(event: PlayerQuitEvent) {
         val player = event.player
 
