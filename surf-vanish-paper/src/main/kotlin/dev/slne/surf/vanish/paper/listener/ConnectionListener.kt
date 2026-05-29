@@ -1,5 +1,7 @@
 package dev.slne.surf.vanish.paper.listener
 
+import com.github.shynixn.mccoroutine.folia.entityDispatcher
+import com.github.shynixn.mccoroutine.folia.launch
 import dev.slne.surf.api.core.messages.adventure.sendText
 import dev.slne.surf.api.paper.glow.SurfGlowingApi
 import dev.slne.surf.vanish.core.service.vanishService
@@ -7,6 +9,7 @@ import dev.slne.surf.vanish.paper.config.VanishConfiguration
 import dev.slne.surf.vanish.paper.plugin
 import dev.slne.surf.vanish.paper.util.VanishPermissionRegistry
 import dev.slne.surf.vanish.paper.util.canVanishSee
+import kotlinx.coroutines.withContext
 import org.bukkit.Bukkit
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
@@ -48,19 +51,23 @@ object ConnectionListener : Listener {
                 )
             }
 
-            Bukkit.getOnlinePlayers()
-                .filterNot { it.uniqueId == player.uniqueId }
-                .forEach { onlinePlayer ->
-                    if (!onlinePlayer.canVanishSee(player)) {
-                        onlinePlayer.hidePlayer(plugin, player)
-                    } else {
-                        onlinePlayer.sendText {
-                            appendInfoPrefix()
-                            variableValue(player.name)
-                            info(" hat den Server unsichtbar betreten.")
+            plugin.launch {
+                Bukkit.getOnlinePlayers()
+                    .filterNot { it.uniqueId == player.uniqueId }
+                    .forEach { onlinePlayer ->
+                        withContext(plugin.entityDispatcher(onlinePlayer)) {
+                            if (!onlinePlayer.canVanishSee(player)) {
+                                onlinePlayer.hidePlayer(plugin, player)
+                            } else {
+                                onlinePlayer.sendText {
+                                    appendInfoPrefix()
+                                    variableValue(player.name)
+                                    info(" hat den Server unsichtbar betreten.")
+                                }
+                            }
                         }
                     }
-                }
+            }
 
             player.sendText {
                 appendInfoPrefix()
