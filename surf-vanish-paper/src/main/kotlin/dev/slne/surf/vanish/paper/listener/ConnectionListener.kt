@@ -2,6 +2,7 @@ package dev.slne.surf.vanish.paper.listener
 
 import com.github.shynixn.mccoroutine.folia.entityDispatcher
 import com.github.shynixn.mccoroutine.folia.launch
+import com.github.shynixn.mccoroutine.folia.regionDispatcher
 import dev.slne.surf.api.core.messages.adventure.sendText
 import dev.slne.surf.api.paper.glow.SurfGlowingApi
 import dev.slne.surf.vanish.core.service.vanishService
@@ -56,7 +57,7 @@ object ConnectionListener : Listener {
                     .filterNot { it.uniqueId == player.uniqueId }
                     .forEach { onlinePlayer ->
 
-                        launch(plugin.entityDispatcher(onlinePlayer)) {
+                        launch(plugin.regionDispatcher(onlinePlayer.location)) {
                             if (!onlinePlayer.canVanishSee(player)) {
                                 onlinePlayer.hidePlayer(plugin, player)
                             } else {
