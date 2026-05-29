@@ -1,6 +1,5 @@
 package dev.slne.surf.vanish.paper.service
 
-import com.github.shynixn.mccoroutine.folia.entityDispatcher
 import com.github.shynixn.mccoroutine.folia.launch
 import com.google.auto.service.AutoService
 import dev.slne.surf.api.core.font.toSmallCaps
@@ -12,6 +11,7 @@ import dev.slne.surf.api.core.util.toObjectSet
 import dev.slne.surf.api.paper.glow.SurfGlowingApi
 import dev.slne.surf.api.paper.scoreboard.SurfScoreboard
 import dev.slne.surf.api.paper.scoreboard.SurfScoreboardApi
+import dev.slne.surf.api.paper.util.forEachPlayerInRegion
 import dev.slne.surf.vanish.api.event.PlayerReappearEvent
 import dev.slne.surf.vanish.api.event.PlayerVanishEvent
 import dev.slne.surf.vanish.core.redisLoader
@@ -24,7 +24,6 @@ import dev.slne.surf.vanish.paper.plugin
 import dev.slne.surf.vanish.paper.util.*
 import io.papermc.paper.threadedregions.scheduler.ScheduledTask
 import it.unimi.dsi.fastutil.objects.ObjectSet
-import kotlinx.coroutines.withContext
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.TextDecoration
 import net.kyori.adventure.util.Services
@@ -73,25 +72,23 @@ class VanishServiceImpl : VanishService, Services.Fallback {
         }
 
         plugin.launch {
-            Bukkit.getOnlinePlayers().forEach { onlinePlayer ->
-                withContext(plugin.entityDispatcher(onlinePlayer)) {
-                    if (onlinePlayer.uniqueId == player.uniqueId) {
-                        return@withContext
-                    }
-
-                    if (!onlinePlayer.canVanishSee(player)) {
-                        if (onlinePlayer.canSee(player)) {
-                            onlinePlayer.hidePlayer(plugin, player)
-                        }
-
-                        spoofMessage?.let(onlinePlayer::sendMessage)
-                    } else {
-                        onlinePlayer.sendMessage(visibleMessage)
-                    }
+            forEachPlayerInRegion(plugin, { onlinePlayer ->
+                if (onlinePlayer.uniqueId == player.uniqueId) {
+                    return@forEachPlayerInRegion
                 }
-            }
+
+                if (!onlinePlayer.canVanishSee(player)) {
+                    if (onlinePlayer.canSee(player)) {
+                        onlinePlayer.hidePlayer(plugin, player)
+                    }
+
+                    spoofMessage?.let(onlinePlayer::sendMessage)
+                } else {
+                    onlinePlayer.sendMessage(visibleMessage)
+                }
+            }, true)
         }
-        
+
         PlayerVanishEvent(player.uniqueId).callEvent()
     }
 
@@ -129,23 +126,21 @@ class VanishServiceImpl : VanishService, Services.Fallback {
         }
 
         plugin.launch {
-            Bukkit.getOnlinePlayers().forEach { onlinePlayer ->
-                withContext(plugin.entityDispatcher(onlinePlayer)) {
-                    if (onlinePlayer.uniqueId == player.uniqueId) {
-                        return@withContext
-                    }
-
-                    if (!onlinePlayer.canVanishSee(player)) {
-                        if (!onlinePlayer.canSee(player)) {
-                            onlinePlayer.showPlayer(plugin, player)
-                        }
-
-                        spoofMessage?.let(onlinePlayer::sendMessage)
-                    } else {
-                        onlinePlayer.sendMessage(visibleMessage)
-                    }
+            forEachPlayerInRegion(plugin, { onlinePlayer ->
+                if (onlinePlayer.uniqueId == player.uniqueId) {
+                    return@forEachPlayerInRegion
                 }
-            }
+
+                if (!onlinePlayer.canVanishSee(player)) {
+                    if (!onlinePlayer.canSee(player)) {
+                        onlinePlayer.showPlayer(plugin, player)
+                    }
+
+                    spoofMessage?.let(onlinePlayer::sendMessage)
+                } else {
+                    onlinePlayer.sendMessage(visibleMessage)
+                }
+            }, true)
         }
 
         PlayerReappearEvent(player.uniqueId).callEvent()
