@@ -15,11 +15,17 @@ import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
 import org.bukkit.event.player.PlayerJoinEvent
 import org.bukkit.event.player.PlayerQuitEvent
+import java.util.*
+import java.util.concurrent.ConcurrentHashMap
 
 object ConnectionListener : Listener {
+    private val pendingFlyRestore = ConcurrentHashMap.newKeySet<UUID>()
+
     @EventHandler
     fun onConnect(event: PlayerJoinEvent) {
         val player = event.player
+
+        pendingFlyRestore.add(player.uniqueId)
 
         if (vanishService.isVanished(player)) {
             event.joinMessage(null)
@@ -69,6 +75,10 @@ object ConnectionListener : Listener {
     fun onClientLoaded(event: PlayerClientLoadedWorldEvent) {
         val player = event.player
 
+        if (!pendingFlyRestore.remove(player.uniqueId)) {
+            return
+        }
+
         if (player.hasPermission(VanishPermissionRegistry.VANISH_SAVE_FLY_STATE)) {
             if (vanishService.getFlyState(player.uniqueId)) {
                 player.allowFlight = true
@@ -81,6 +91,7 @@ object ConnectionListener : Listener {
     fun onDisconnect(event: PlayerQuitEvent) {
         val player = event.player
 
+        pendingFlyRestore.remove(player.uniqueId)
         vanishService.hideAndDeleteScoreboard(player)
         vanishService.setFlyState(player.uniqueId, player.isFlying)
 
